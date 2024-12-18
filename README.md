@@ -1,0 +1,1 @@
+This backed is focus about manage of accounts (this case was used user for describe it) and profiles, for add favorite movies or series it need to use other database in this case used TMDB for give movies and series and other information for give more performance.
