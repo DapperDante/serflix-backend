@@ -1,0 +1,42 @@
+import { Request, Response } from "express";
+import { getDataToSearch } from "../IA/search.IA";
+import { Movies } from "../api/movies.api";
+export const searchMovies = async(req: Request, resp: Response)=>{
+    try{
+        const {query} = req;
+        if(!query.query || !query.times || !query.manyItemsRelation)
+            throw new Error();
+        const movies = await getMoviesByTitle(query.query.toString());
+        //First it search movie and if it doesn't have any relation with that title, 
+        //so research at least one movie with that text throught similarities
+        if(!movies.results.length){
+          console.log("movie research");
+            //This parameters to calibrate how many values returned or  values research
+            const result = await getDataToSearch(query.query, Number(query.times), Number(query.manyItemsRelation));
+            resp.status(200).json({results: result, total_pages: 1, total_results: result.length});
+            return;
+        }
+        resp.status(200).json(movies);
+    }catch(err){
+      console.log(err);
+        resp.status(400).json({
+            msg: "query incorrect"
+        });
+    }
+}
+const getMoviesByTitle = async (title: string): Promise<Movies> => {
+let data!: Movies;
+  await fetch(
+    `${process.env.API_TMDB}/search/movie?query=${title}&include_adult=false&language=en-US&page=1`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
+      },
+    }
+  ).then(async (movies) => {
+    data = await movies.json();
+  });
+  data.results = data.results.filter(movie=>movie.poster_path);
+  return data;
+}

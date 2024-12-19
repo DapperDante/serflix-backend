@@ -30,7 +30,7 @@ class Server {
         this.app.use('/api/user', routerUser);
         this.app.use('/api/profile', routerProfile);
         this.app.use('/api/score-movie', routerReview);
-        this.app.use('api/search', routerSearch);
+        this.app.use('/api/search', routerSearch);
     }
     middleware(){
         this.app.use(cors());

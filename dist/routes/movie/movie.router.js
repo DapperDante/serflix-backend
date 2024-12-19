@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const profile_movies_controller_1 = require("../../controllers/profile_movies.controller");
 const routerMovie = (0, express_1.Router)();
-console.log("im here");
 routerMovie.get('/get-favorite/:idProfile', profile_movies_controller_1.getAllMoviesOfProfile);
 routerMovie.get('/get-favorite/:idProfile/:idMovie', profile_movies_controller_1.getMovieByIdOfProfile);
 routerMovie.post('/add-favorite', profile_movies_controller_1.addFavoriteMovie);

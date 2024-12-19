@@ -1,1 +1,3 @@
 This backed is focus about manage of accounts (this case was used user for describe it) and profiles, for add favorite movies or series it need to use other database in this case used TMDB for give movies and series and other information for give more performance.
+<hr></hr>
+<b>Note: </b> if you have problem when install package like @tensorflow/tfjs-node and @tensorflow-models/universal-sentence-encoder, you must force that process or install latest version of visual studio and python (the best way update or installation is directly when you install node), but you have problem yet, so in the node_modules you must move file "tensorflow.dll" from "node_modules\@tensorflow\tfjs-node\lib\napi-v9" to "node_modules\@tensorflow\tfjs-node\lib\napi-v8".

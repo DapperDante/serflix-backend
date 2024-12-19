@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -33,11 +24,11 @@ function controlOfErrors(errorStateSql) {
     }
     return status;
 }
-const addNewUser = (req, resp) => __awaiter(void 0, void 0, void 0, function* () {
+const addNewUser = async (req, resp) => {
     try {
         const { body } = req;
         body.password = (0, incriptation_1.Encrypt)(body.password);
-        yield users_model_1.default.create(body);
+        await users_model_1.default.create(body);
         resp.status(200).json({
             msg: 'User created'
         });
@@ -48,12 +39,12 @@ const addNewUser = (req, resp) => __awaiter(void 0, void 0, void 0, function* ()
             msg: "Fail to create user"
         });
     }
-});
+};
 exports.addNewUser = addNewUser;
-const verifyUser = (req, resp) => __awaiter(void 0, void 0, void 0, function* () {
+const verifyUser = async (req, resp) => {
     try {
         const { body } = req;
-        yield users_model_1.default.findOne({ where: {
+        await users_model_1.default.findOne({ where: {
                 username: body.username
             } }).then((data) => {
             if (!data) {
@@ -79,9 +70,9 @@ const verifyUser = (req, resp) => __awaiter(void 0, void 0, void 0, function* ()
             msg: "Has an ocurred problem"
         });
     }
-});
+};
 exports.verifyUser = verifyUser;
-const getInfoProfile = (req, resp) => __awaiter(void 0, void 0, void 0, function* () {
+const getInfoProfile = async (req, resp) => {
     try {
         const { idProfile } = req.params;
         const { idUser } = req.params;
@@ -100,5 +91,5 @@ const getInfoProfile = (req, resp) => __awaiter(void 0, void 0, void 0, function
             msg: "Not find profile"
         });
     }
-});
+};
 exports.getInfoProfile = getInfoProfile;
