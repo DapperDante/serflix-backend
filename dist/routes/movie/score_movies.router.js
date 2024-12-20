@@ -2,7 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const score_movies_controller_1 = require("../../controllers/score_movies.controller");
+const score_series_controller_1 = require("../../controllers/score_series.controller");
 const routerReview = (0, express_1.Router)();
-routerReview.post('/add-review', score_movies_controller_1.addNewReview);
-routerReview.get('/get-review/:idMovie', score_movies_controller_1.getReviewOfMovie);
+routerReview.post('/movie/add', score_movies_controller_1.addNewReviewOfMovie);
+routerReview.get('/movie/get/:idMovie', score_movies_controller_1.getReviewOfMovie);
+routerReview.post('/serie/add', score_series_controller_1.addNewReviewOfSerie);
+routerReview.get('/serie/get/:idSerie', score_series_controller_1.getReviewOfSerie);
 exports.default = routerReview;

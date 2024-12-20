@@ -65,8 +65,7 @@ export const verifyUser = async(req: Request, resp: Response) =>{
 }
 export const getInfoProfile = async(req: Request, resp: Response) =>{
     try{
-        const {idProfile} = req.params;
-        const {idUser} = req.params;
+        const {idProfile, idUser} = req.params;
         sequelize.query(`
             SELECT COUNT(*) FROM profile_movies WHERE profile_id = :idProfile AND user_id = :idUser`, 
             {

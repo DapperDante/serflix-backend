@@ -1,11 +1,10 @@
 {
   "name": "serve-serflix",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "index.js",
   "scripts": {
     "start": "node dist/app.js",
-    "dev": "npx nodemon dist/app.js",
-    "watch": "tsc --watch"
+    "dev": "concurrently \"tsc --watch\" \"npx nodemon dist/app.js\""
   },
   "keywords": [],
   "author": "",

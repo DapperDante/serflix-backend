@@ -28,11 +28,11 @@ class Server {
         });
     }
     routes() {
-        this.app.use('/api/favorite-movie', movie_router_1.default);
-        this.app.use('/api/favorite-serie', serie_router_1.default);
+        this.app.use('/api/movie', movie_router_1.default);
+        this.app.use('/api/serie', serie_router_1.default);
         this.app.use('/api/user', user_router_1.default);
         this.app.use('/api/profile', profile_router_1.default);
-        this.app.use('/api/score-movie', score_movies_router_1.default);
+        this.app.use('/api/score', score_movies_router_1.default);
         this.app.use('/api/search', search_router_1.default);
     }
     middleware() {
@@ -51,4 +51,4 @@ class Server {
     }
 }
 dotenv_1.default.config();
-const server = new Server();
+new Server();

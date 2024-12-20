@@ -74,8 +74,7 @@ const verifyUser = async (req, resp) => {
 exports.verifyUser = verifyUser;
 const getInfoProfile = async (req, resp) => {
     try {
-        const { idProfile } = req.params;
-        const { idUser } = req.params;
+        const { idProfile, idUser } = req.params;
         connection_1.default.query(`
             SELECT COUNT(*) FROM profile_movies WHERE profile_id = :idProfile AND user_id = :idUser`, {
             replacements: {

@@ -94,11 +94,6 @@ const getRankedResponses = async (model, query, times, manyRelationMovies) => {
     scores = scores
         .sort((a, b) => b.score - a.score)
         .slice(0, manyRelationMovies);
-    // console.log(
-    //   scores.map((value) => {
-    //     return { response: value.response.title, score: value.score };
-    //   })
-    // );
     return scores;
 };
 const getDataToSearch = async (query, times, manyRelationMovies) => {

@@ -16,9 +16,9 @@ export const addNewProfile = async(req: Request, resp: Response) => {
 }
 export const getAllProfiles = async(req: Request, resp: Response) => {
     try{
-        const {id} = req.params;
+        const {idUser} = req.params;
         await Profiles.findAll({where: {
-            user_id: id
+            user_id: idUser
         }}).then(data=>{
             resp.status(200).json(data);
         })

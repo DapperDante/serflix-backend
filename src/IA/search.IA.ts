@@ -96,11 +96,6 @@ const getRankedResponses: any = async (
   scores = scores
     .sort((a: searchData, b: searchData) => b.score - a.score)
     .slice(0, manyRelationMovies);
-  // console.log(
-  //   scores.map((value) => {
-  //     return { response: value.response.title, score: value.score };
-  //   })
-  // );
   return scores;
 };
 

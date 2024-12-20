@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import ScoreMovies from "../models/score_movies.model";
 import sequelize from "../db/connection";
-export const addNewReview = async(req: Request, resp: Response) =>{
+export const addNewReviewOfMovie = async(req: Request, resp: Response) =>{
     try{
         const {body} = req;
         await ScoreMovies.create(body);
@@ -9,8 +9,9 @@ export const addNewReview = async(req: Request, resp: Response) =>{
             msg: "Review created"
         });
     }catch(err){
+			console.log(err);
         resp.status(400).json({
-            msg: "A has an problem"
+            msg: "There was a problem"
         })
     }
 }
@@ -25,11 +26,11 @@ export const getReviewOfMovie = async(req: Request, resp: Response)=>{
             replacements: {
                 idMovie
             }
-        })
+        });
         resp.status(200).json(data);
     }catch(err){
         resp.status(400).json({
-            msg: "A has an problem"
+            msg: "There was a problem"
         })
     }
 }

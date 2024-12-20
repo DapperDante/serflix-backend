@@ -25,11 +25,11 @@ class Server {
         })
     }
     routes(){
-        this.app.use('/api/favorite-movie', routerMovie);
-        this.app.use('/api/favorite-serie', routerSerie);
+        this.app.use('/api/movie', routerMovie);
+        this.app.use('/api/serie', routerSerie);
         this.app.use('/api/user', routerUser);
         this.app.use('/api/profile', routerProfile);
-        this.app.use('/api/score-movie', routerReview);
+        this.app.use('/api/score', routerReview);
         this.app.use('/api/search', routerSearch);
     }
     middleware(){
@@ -48,4 +48,4 @@ class Server {
     }
 }
 dotenv.config();
-const server = new Server();
+new Server();

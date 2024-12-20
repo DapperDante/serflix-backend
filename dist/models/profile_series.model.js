@@ -7,6 +7,12 @@ const sequelize_1 = require("sequelize");
 const connection_1 = __importDefault(require("../db/connection"));
 const profiles_model_1 = __importDefault(require("./profiles.model"));
 const ProfileSeries = connection_1.default.define('profile_series', {
+    id: {
+        type: sequelize_1.DataTypes.NUMBER,
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true
+    },
     profile_id: {
         type: sequelize_1.DataTypes.NUMBER,
         allowNull: false,
@@ -18,6 +24,11 @@ const ProfileSeries = connection_1.default.define('profile_series', {
     serie_id: {
         type: sequelize_1.DataTypes.NUMBER,
         allowNull: false
+    },
+    is_delete: {
+        type: sequelize_1.DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: 0
     }
 }, {
     createdAt: false,
