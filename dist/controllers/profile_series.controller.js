@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteFavoriteSerie = exports.getOnlyFavoriteSerie = exports.addFavoriteSerie = exports.getAllFavoriteSeriesByProfile = void 0;
+exports.deleteFavoriteSerie = exports.getSerieByIdOfProfile = exports.addFavoriteSerie = exports.getAllSeriesOfProfile = void 0;
 const profile_series_model_1 = __importDefault(require("../models/profile_series.model"));
-const getAllFavoriteSeriesByProfile = async (req, resp) => {
+const getAllSeriesOfProfile = async (req, resp) => {
     try {
         const { idProfile } = req.params;
         await profile_series_model_1.default.findAll({
@@ -36,7 +36,7 @@ const getAllFavoriteSeriesByProfile = async (req, resp) => {
         });
     }
 };
-exports.getAllFavoriteSeriesByProfile = getAllFavoriteSeriesByProfile;
+exports.getAllSeriesOfProfile = getAllSeriesOfProfile;
 const addFavoriteSerie = async (req, resp) => {
     try {
         const { body } = req;
@@ -64,7 +64,7 @@ const addFavoriteSerie = async (req, resp) => {
     }
 };
 exports.addFavoriteSerie = addFavoriteSerie;
-const getOnlyFavoriteSerie = async (req, resp) => {
+const getSerieByIdOfProfile = async (req, resp) => {
     try {
         const { idProfile, idSerie } = req.params;
         await profile_series_model_1.default.findOne({ where: {
@@ -81,7 +81,7 @@ const getOnlyFavoriteSerie = async (req, resp) => {
         });
     }
 };
-exports.getOnlyFavoriteSerie = getOnlyFavoriteSerie;
+exports.getSerieByIdOfProfile = getSerieByIdOfProfile;
 const deleteFavoriteSerie = async (req, resp) => {
     try {
         const { id } = req.params;

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import ProfileSeries from "../models/profile_series.model";
 
-export const getAllFavoriteSeriesByProfile = async (req: Request, resp: Response) => {
+export const getAllSeriesOfProfile = async (req: Request, resp: Response) => {
 	try {
 		const { idProfile } = req.params;
 		await ProfileSeries.findAll({
@@ -10,7 +10,8 @@ export const getAllFavoriteSeriesByProfile = async (req: Request, resp: Response
 				is_delete: 0,
 			},
 		}).then((modelSeries) => {
-			Promise.all(modelSeries.map(async modelSerie=>{
+			Promise.all(
+				modelSeries.map(async modelSerie=>{
 				let auxData: any;
 				await fetch(`${process.env.API_TMDB}/tv/${modelSerie.dataValues.serie_id}?language=US`,
 					{
@@ -58,7 +59,7 @@ export const addFavoriteSerie = async (req: Request, resp: Response)=>{
 		})
 	}
 }
-export const getOnlyFavoriteSerie = async (req: Request, resp: Response)=>{
+export const getSerieByIdOfProfile = async (req: Request, resp: Response)=>{
 	try {
 		const {idProfile, idSerie} = req.params;
 		await ProfileSeries.findOne({where: {

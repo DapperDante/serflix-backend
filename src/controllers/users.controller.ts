@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import Users from "../models/users.model";
 import { Encrypt, Decrypt} from "../Incriptation/incriptation";
-import sequelize from "../db/connection";
 //It's only to refer with current error message and get best control
 const ErrorTypes = {
     SAME_VALUES: '23000',
@@ -61,25 +60,5 @@ export const verifyUser = async(req: Request, resp: Response) =>{
         resp.status(400).json({
             msg: "Has an ocurred problem"
         });
-    }
-}
-export const getInfoProfile = async(req: Request, resp: Response) =>{
-    try{
-        const {idProfile, idUser} = req.params;
-        sequelize.query(`
-            SELECT COUNT(*) FROM profile_movies WHERE profile_id = :idProfile AND user_id = :idUser`, 
-            {
-                replacements: {
-                    idProfile: idProfile,
-                    idUser: idUser
-                }
-            }
-        ).then((data)=>{
-            resp.status(200).json(data);
-        });
-    }catch(err){
-        resp.status(404).json({
-            msg: "Not find profile"
-        })
     }
 }

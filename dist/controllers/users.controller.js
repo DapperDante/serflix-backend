@@ -3,10 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getInfoProfile = exports.verifyUser = exports.addNewUser = void 0;
+exports.verifyUser = exports.addNewUser = void 0;
 const users_model_1 = __importDefault(require("../models/users.model"));
 const incriptation_1 = require("../Incriptation/incriptation");
-const connection_1 = __importDefault(require("../db/connection"));
 //It's only to refer with current error message and get best control
 const ErrorTypes = {
     SAME_VALUES: '23000',
@@ -72,23 +71,3 @@ const verifyUser = async (req, resp) => {
     }
 };
 exports.verifyUser = verifyUser;
-const getInfoProfile = async (req, resp) => {
-    try {
-        const { idProfile, idUser } = req.params;
-        connection_1.default.query(`
-            SELECT COUNT(*) FROM profile_movies WHERE profile_id = :idProfile AND user_id = :idUser`, {
-            replacements: {
-                idProfile: idProfile,
-                idUser: idUser
-            }
-        }).then((data) => {
-            resp.status(200).json(data);
-        });
-    }
-    catch (err) {
-        resp.status(404).json({
-            msg: "Not find profile"
-        });
-    }
-};
-exports.getInfoProfile = getInfoProfile;

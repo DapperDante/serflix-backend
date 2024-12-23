@@ -12,7 +12,7 @@ export const getAllMoviesOfProfile = async (req: Request, resp: Response) => {
 		}).then((modelMovies) => {
 			//For this request need uses other database (TMDB)
 			Promise.all(
-				modelMovies.map(async (modelMovie) => {
+				modelMovies.map(async modelMovie => {
 					let auxData: any;
 					await fetch(
 						`${process.env.API_TMDB}/movie/${modelMovie.dataValues.movie_id}?language=US`,
