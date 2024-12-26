@@ -1,0 +1,22 @@
+services:
+  serflix_db:
+    image: mysql
+    ports:
+      - $DB_DOCKER_PORT:$DB_LOCAL_PORT
+    env_file:
+      - ./.env
+    environment:
+      MYSQL_ROOT_PASSWORD: $DB_PASSWORD
+      MYSQL_DATABASE: $DB_NAME
+  serflix_backend:
+    build: .
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=serflix_db
+    ports:
+      - $DOCKER_PORT:$LOCAL_PORT
+    depends_on:
+      - serflix_db
+    links:
+      - serflix_db

@@ -41,22 +41,30 @@ exports.getAllProfiles = getAllProfiles;
 const getProfile = async (req, resp) => {
     try {
         const { idProfile } = req.params;
+        console.log(idProfile);
         const [data, metadata] = await connection_1.default.query(`
 			SELECT profiles.name, profiles.img, (
-				SELECT group_concat(movies.movie_id) FROM profile_movies AS movies WHERE movies.is_delete = 0
+				SELECT group_concat(movies.movie_id) FROM profile_movies AS movies WHERE movies.is_delete = 0 AND movies.profile_id = :idProfile
 			) AS movies, (
-				SELECT group_concat(series.serie_id) FROM profile_series AS series WHERE series.is_delete = 0
-			) AS series FROM profiles WHERE profiles.id = 3;
-		`);
+				SELECT group_concat(series.serie_id) FROM profile_series AS series WHERE series.is_delete = 0 AND series.profile_id = :idProfile
+			) AS series FROM profiles WHERE profiles.id = :idProfile;
+		`, {
+            replacements: {
+                idProfile
+            }
+        });
+        console.log(data);
         const result = {
             name: data[0].name,
             img: data[0].img,
-            movies: data[0].movies.split(',').map(Number),
-            series: data[0].series.split(',').map(Number)
+            movies: data[0].movies ? data[0].movies.split(',').map(Number) : [],
+            series: data[0].series ? data[0].series.split(',').map(Number) : []
         };
+        console.log(result);
         resp.status(200).json(result);
     }
     catch (err) {
+        console.log(err);
         resp.status(400).json({
             msg: "There was a problem"
         });

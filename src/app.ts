@@ -8,12 +8,13 @@ import routerUser from "./routes/user/user.router";
 import routerProfile from "./routes/profile/profile.router";
 import routerReview from "./routes/movie/score_movies.router";
 import routerSearch from "./routes/search/search.router";
+dotenv.config();
 class Server {
     private app: Application;
     private port: string;
     constructor(){
         this.app = express();
-        this.port = process.env.PORT || '3004';
+        this.port = process.env.LOCAL_PORT!;
         this.listen();
         this.middleware();
         this.routes();
@@ -39,7 +40,7 @@ class Server {
     async database(){
         try{
             await db.authenticate();
-            console.log('conecto to Database')
+            console.log('connect to Database')
         }catch(err){
             console.log(err);
             console.log("can't connect to Database");
@@ -47,5 +48,4 @@ class Server {
         }
     }
 }
-dotenv.config();
 new Server();

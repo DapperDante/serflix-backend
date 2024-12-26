@@ -13,10 +13,11 @@ const user_router_1 = __importDefault(require("./routes/user/user.router"));
 const profile_router_1 = __importDefault(require("./routes/profile/profile.router"));
 const score_movies_router_1 = __importDefault(require("./routes/movie/score_movies.router"));
 const search_router_1 = __importDefault(require("./routes/search/search.router"));
+dotenv_1.default.config();
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
-        this.port = process.env.PORT || '3004';
+        this.port = process.env.LOCAL_PORT;
         this.listen();
         this.middleware();
         this.routes();
@@ -42,7 +43,7 @@ class Server {
     async database() {
         try {
             await connection_1.default.authenticate();
-            console.log('conecto to Database');
+            console.log('connect to Database');
         }
         catch (err) {
             console.log(err);
@@ -50,5 +51,4 @@ class Server {
         }
     }
 }
-dotenv_1.default.config();
 new Server();
