@@ -3,30 +3,30 @@
 It's focus about manage control of accounts (this case was used user to describe it) and profiles, There are many APIs for diferent case but each of them has structure and similarity with others like ``/api/movies/get`` and ``/api/series/get`` both APIs have same structure but 
 there are some diference about the response
 
-## API
+## API 
 
 All request have prefix ``/api/``, the next table you can see the options about each Api: 
 
-| Name | Options | Parameters|
-|----------|---------|-----------|
-| ``/user`` | ``/add``   | ``username, email, password`` |
-|    | ``/verify`` | ``username, password`` |
-| ``/profile`` | ``/add`` | ``user_id, name, img`` |
-|| ``/get/:idUser`` | ``none`` | 
-|| ``/get/:idUser/:idProfile`` | ``none`` | 
-| ``/movie`` | ``/get/:idProfile`` | ``none`` |
-|| ``/get/:idProfile/:idMovie`` | ``none`` |
-|| ``/add`` | ``profile_id, movie_id`` |
-|| ``/delete/:id`` | ``none`` |
-| ``/serie`` | ``/get/:idProfile`` | ``none`` |
-|| ``/get/:idProfile/:idSerie`` | ``none`` |
-|| ``/add`` | ``profile_id, serie_id`` |
-|| ``/delete/:id`` | ``none`` |
-| ``/score`` | ``/movie/add`` | ``profile_id, movie_id, score, review`` |
-|| ``/movie/get/:idMovie`` | ``none`` |
-|| ``/serie/add`` | ``profile_id, serie_id, score, review`` |
-|| ``/serie/get/:idSerie`` | ``none`` |
-| ``/search`` | ``/movies?query=your_query&times=any_number&manyItemsRelation=any_number`` | ``none`` |
+| Name | Options | Parameters| response |
+|----------|---------|-----------|---------- |
+| ``/user`` | ``/add``   | ``username, email, password`` | ``msg``|
+|    | ``/verify`` | ``username, password`` |``msg, idUser``|
+| ``/profile`` | ``/add`` | ``user_id, name, img`` | ``msg`` |
+|| ``/get/:idUser`` | ``none`` | ``id, user_id, name, img``|
+|| ``/get/:idUser/:idProfile`` | ``none`` | ``name, img, results[]``|
+| ``/movie`` | ``/get/:idProfile`` | ``none`` |``results[]``|
+|| ``/get/:idProfile/:idMovie`` | ``none``|``msg, id``|
+|| ``/add`` | ``profile_id, movie_id`` |``msg \| msg, id``|
+|| ``/delete/:id`` | ``none`` | ``msg``|
+| ``/serie`` | ``/get/:idProfile`` | ``none`` | ``results[]``|
+|| ``/get/:idProfile/:idSerie`` | ``none`` |``msg, id``|
+|| ``/add`` | ``profile_id, serie_id`` |``msg \| msg, id``|
+|| ``/delete/:id`` | ``none`` |``msg``|
+| ``/score`` | ``/movie/add`` | ``profile_id, movie_id, score, review`` |``msg``|
+|| ``/movie/get/:idMovie`` | ``none`` |``[...]``|
+|| ``/serie/add`` | ``profile_id, serie_id, score, review`` |``msg``|
+|| ``/serie/get/:idSerie`` | ``none`` |``[...]``|
+| ``/search`` | ``/movies?query=your_query&times=any_number&manyItemsRelation=any_number`` | ``none`` |``results[]``|
 
 When you request of search you must add queries for IA (tensorflow/tfjs-node and universal-sentence-encoder) can work to research on the data's database:
 **where**: 

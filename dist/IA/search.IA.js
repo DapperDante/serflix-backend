@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDataToSearch = void 0;
 const tf = __importStar(require("@tensorflow/tfjs-node"));
 const encoder = __importStar(require("@tensorflow-models/universal-sentence-encoder"));
+const movies_tmdb_1 = require("../tmdb_api/movies.tmdb");
 tf.setBackend('tensorflow');
 //Those function is only mathematic operations to tensor's universal-sentence-encoder
 const zipWith = (f, xs, ys) => {
@@ -48,39 +49,12 @@ const dotProduct = (xs, ys) => {
         ? sum(zipWith((a, b) => a * b, xs, ys))
         : undefined;
 };
-//API's TMDB
-const getMoviePopular = async (page = 1) => {
-    let data;
-    await fetch(`${process.env.API_TMDB}/movie/now_playing?language=US&page=${page}`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-        },
-    }).then(async (movies) => {
-        data = await movies.json();
-    });
-    data.results = data.results.filter(movie => movie.poster_path);
-    return data;
-};
-const getSimilarMovie = async (idMovie) => {
-    let data;
-    await fetch(`${process.env.API_TMDB}/movie/${idMovie}/similar?language=US&page=1`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-        },
-    }).then(async (value) => {
-        data = await value.json();
-    });
-    data.results = data.results.filter(movie => movie.poster_path);
-    return data;
-};
 //This function is when you need only data score without movie's similarities like next function
 const getRankedResponses = async (model, query, times, manyRelationMovies) => {
     let movies = [];
     let aux;
     for (let i = 0; i < times; i++) {
-        aux = await getMoviePopular(i + 1);
+        aux = await (0, movies_tmdb_1.getMoviePopular)(i + 1);
         movies.push(...aux.results);
     }
     const input = {
@@ -111,7 +85,7 @@ const getDataToSearch = async (query, times, manyRelationMovies) => {
     const score = await getRankedResponses(model, query, times, manyRelationMovies);
     let result = score.map((value) => value.response);
     await Promise.all(score.map(async (value) => {
-        let aux = await getSimilarMovie(value.response.id);
+        let aux = await (0, movies_tmdb_1.getSimilarMovie)(value.response.id);
         result.push(...aux.results);
     }));
     return result;

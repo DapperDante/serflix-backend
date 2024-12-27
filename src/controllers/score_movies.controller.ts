@@ -9,7 +9,6 @@ export const addNewReviewOfMovie = async(req: Request, resp: Response) =>{
             msg: "Review created"
         });
     }catch(err){
-			console.log(err);
         resp.status(400).json({
             msg: "There was a problem"
         })

@@ -6,7 +6,7 @@ import db from './db/connection';
 import cors from 'cors';
 import routerUser from "./routes/user/user.router";
 import routerProfile from "./routes/profile/profile.router";
-import routerReview from "./routes/movie/score_movies.router";
+import routerReview from "./routes/score/score.router";
 import routerSearch from "./routes/search/search.router";
 dotenv.config();
 class Server {
@@ -44,7 +44,6 @@ class Server {
         }catch(err){
             console.log(err);
             console.log("can't connect to Database");
-            
         }
     }
 }

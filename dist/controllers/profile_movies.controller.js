@@ -50,7 +50,7 @@ const addFavoriteMovie = async (req, resp) => {
             if (!value) {
                 await profile_movies_model_1.default.create(body);
                 resp.status(200).json({
-                    msg: "Movie added successful",
+                    msg: "Movie added successful"
                 });
                 return;
             }

@@ -1,6 +1,7 @@
 import * as tf from "@tensorflow/tfjs-node";
 import * as encoder from "@tensorflow-models/universal-sentence-encoder";
 import { Movie, Movies } from "../api/movies.api";
+import { getMoviePopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
 tf.setBackend('tensorflow');
 interface searchData {
   response: Movie;
@@ -20,39 +21,6 @@ const dotProduct = (xs: any, ys: any) => {
   return xs.length === ys.length
     ? sum(zipWith((a: any, b: any) => a * b, xs, ys))
     : undefined;
-};
-//API's TMDB
-const getMoviePopular: any = async (page: number | string = 1) => {
-  let data: Movies;
-  await fetch(
-    `${process.env.API_TMDB}/movie/now_playing?language=US&page=${page}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-      },
-    }
-  ).then(async (movies) => {
-    data = await movies.json();
-  });
-  data!.results = data!.results.filter(movie=>movie.poster_path);
-  return data!;
-};
-const getSimilarMovie: any = async (idMovie: number | string) => {
-  let data: Movies;
-  await fetch(
-    `${process.env.API_TMDB}/movie/${idMovie}/similar?language=US&page=1`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-      },
-    }
-  ).then(async (value) => {
-    data = await value.json();
-  });
-  data!.results = data!.results.filter(movie=>movie.poster_path);
-  return data!;
 };
 //This function is when you need only data score without movie's similarities like next function
 const getRankedResponses: any = async (

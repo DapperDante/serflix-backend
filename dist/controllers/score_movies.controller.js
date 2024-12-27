@@ -15,7 +15,6 @@ const addNewReviewOfMovie = async (req, resp) => {
         });
     }
     catch (err) {
-        console.log(err);
         resp.status(400).json({
             msg: "There was a problem"
         });

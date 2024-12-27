@@ -11,7 +11,6 @@ const searchMovies = async (req, resp) => {
         //First it search movie and if it doesn't have any relation with that title, 
         //so research at least one movie with that text throught similarities
         if (!movies.results.length) {
-            console.log("movie research");
             //This parameters to calibrate how many values returned or  values research
             const result = await (0, search_IA_1.getDataToSearch)(query.query, Number(query.times), Number(query.manyItemsRelation));
             resp.status(200).json({ results: result, total_pages: 1, total_results: result.length });
@@ -20,7 +19,6 @@ const searchMovies = async (req, resp) => {
         resp.status(200).json(movies);
     }
     catch (err) {
-        console.log(err);
         resp.status(400).json({
             msg: "query incorrect"
         });
