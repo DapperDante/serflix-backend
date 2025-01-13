@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { addFavoriteMovie, deleteFavoriteMovie, getAllMoviesOfProfile, getMovieByIdOfProfile } from '../../controllers/profile_movies.controller';
+import { addFavoriteMovie, deleteFavoriteMovie, getMovieByProfile, getMoviesByProfile } from '../../controllers/profile_movies.controller';
 const routerMovie = Router();
 routerMovie.post('/add', addFavoriteMovie);
-routerMovie.get('/get/:idProfile', getAllMoviesOfProfile);
-routerMovie.get('/get/:idProfile/:idMovie', getMovieByIdOfProfile);
+routerMovie.get('/get', getMoviesByProfile);
+routerMovie.get('/get/:idMovie', getMovieByProfile);
 routerMovie.delete('/delete/:id', deleteFavoriteMovie);
 export default routerMovie;

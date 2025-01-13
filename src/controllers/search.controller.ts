@@ -1,40 +1,44 @@
 import { Request, Response } from "express";
 import { getDataToSearch } from "../IA/search.IA";
-import { Movies } from "../api/movies.api";
-export const searchMovies = async(req: Request, resp: Response)=>{
-    try{
-        const {query} = req;
-        if(!query.query || !query.times || !query.manyItemsRelation)
-            throw new Error();
-        const movies = await getMoviesByTitle(query.query.toString());
-        //First it search movie and if it doesn't have any relation with that title, 
-        //so research at least one movie with that text throught similarities
-        if(!movies.results.length){
-            //This parameters to calibrate how many values returned or  values research
-            const result = await getDataToSearch(query.query, Number(query.times), Number(query.manyItemsRelation));
-            resp.status(200).json({results: result, total_pages: 1, total_results: result.length});
-            return;
-        }
-        resp.status(200).json(movies);
-    }catch(err){
-        resp.status(400).json({
-            msg: "query incorrect"
-        });
-    }
-}
-const getMoviesByTitle = async (title: string): Promise<Movies> => {
-let data!: Movies;
-  await fetch(
-    `${process.env.API_TMDB}/search/movie?query=${title}&include_adult=false&language=en-US&page=1`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-      },
-    }
-  ).then(async (movies) => {
-    data = await movies.json();
-  });
-  data.results = data.results.filter(movie=>movie.poster_path);
-  return data;
-}
+import {
+	ErrorControl
+} from "../error/error-handling";
+import { getMoviesByTitle } from "../tmdb_api/movies.tmdb";
+import { getSeriesByTitle } from "../tmdb_api/series.tmdb";
+export const searchGlobal = async (req: Request, resp: Response) => {
+	try {
+		const { query, times, manyItemsRelation } = req.query;
+		if (!(query && times && manyItemsRelation)) throw new Error("sintax_error");
+		const movies = await getMoviesByTitle(query.toString());
+		const series = await getSeriesByTitle(query.toString());
+		//if query doesn't match to one title, so it has research for all movies until get movies to nearest match to thit query
+		if (!(movies.results.length || series.results.length)) {
+			//the parameters is to calibrate how many values returned or how many values research
+			const results = await getDataToSearch(
+				query,
+				Number(times),
+				Number(manyItemsRelation)
+			);
+			resp
+				.status(200)
+				.json({ results, total_pages: 1, total_results: results.length });
+			return;
+		}
+		if(movies.results.length){
+			movies.results.map((movie: any) => {
+				movie.type = "movie";
+				return movie;
+			});
+		}
+		if(series.results.length){
+			series.results.map((serie: any) => {
+				serie.type = "serie";
+				return serie;
+			});
+		}
+		resp.status(200).json({results: [...movies.results, ...series.results], total_pages: Math.max(movies.total_pages, series.total_pages), total_results: movies.total_results + series.total_results});
+	} catch (error: any) {
+		const { code, msg } = ErrorControl(error);
+		resp.status(code).json({ msg });
+	}
+};
