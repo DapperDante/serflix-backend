@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { addNewProfile, getAllProfiles } from "../../controllers/profiles.controller";
-import { getInfoProfile } from "../../controllers/users.controller";
+import { addProfile, getProfile, getProfiles, logInProfile, logOutProfile, updateProfile} from "../../controllers/profiles.controller";
 const routerProfile = Router();
-routerProfile.post('/add-profile', addNewProfile);
-routerProfile.get('/get-all-profiles/:id', getAllProfiles);
-routerProfile.get('/get-info-profile/:idUser/:idProfile', getInfoProfile);
+routerProfile.post('/add', addProfile);
+routerProfile.get('/get-all', getProfiles);
+//this is to manage control of log in and out of the profile
+routerProfile.post('/log-in', logInProfile);
+// It's useful when you log out of the profile and get token of the user
+routerProfile.get('/log-out', logOutProfile);
+routerProfile.get('/get', getProfile);
+routerProfile.put('/put', updateProfile);
 export default routerProfile;

@@ -1,5 +1,5 @@
 import { Router } from "express";
+import { searchGlobal } from "../../controllers/search.controller";
 const routerSearch = Router();
-// routerSearch.get('/movies', searchMovies);
-// routerSearch.get('/series'. searchSeries);
+routerSearch.get('', searchGlobal);
 export default routerSearch;

@@ -10,7 +10,7 @@ const Users = db.define('users', {
     username: {
         type: DataTypes.TEXT,
         unique: true,
-        allowNull: false
+		allowNull: false
     },
     email: {
         type: DataTypes.TEXT,
@@ -21,9 +21,8 @@ const Users = db.define('users', {
         type: DataTypes.TEXT,
         allowNull: false
     }
-    
 }, {
     createdAt: false,
-    updatedAt: false
+    updatedAt: false,
 });
 export default Users;
