@@ -21,6 +21,7 @@ const cors_1 = __importDefault(require("cors"));
 const user_router_1 = __importDefault(require("./routes/user/user.router"));
 const profile_router_1 = __importDefault(require("./routes/profile/profile.router"));
 const score_movies_router_1 = __importDefault(require("./routes/movie/score_movies.router"));
+const search_router_1 = __importDefault(require("./routes/search/search.router"));
 class Server {
     constructor() {
         this.app = (0, express_1.default)();
@@ -41,6 +42,7 @@ class Server {
         this.app.use('/api/user', user_router_1.default);
         this.app.use('/api/profile', profile_router_1.default);
         this.app.use('/api/score-movie', score_movies_router_1.default);
+        this.app.use('api/search', search_router_1.default);
     }
     middleware() {
         this.app.use((0, cors_1.default)());
