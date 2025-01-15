@@ -15,7 +15,7 @@ class Server {
 	private port: string;
 	constructor() {
 		this.app = express();
-		this.port = process.env.LOCAL_PORT!;
+		this.port = process.env.LOCAL_PORT || 4000;
 		this.listen();
 		this.middleware();
 		this.routes();
