@@ -13,7 +13,7 @@ export const addProfile = async (req: Request, resp: Response) => {
 		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
 		if (!(name && img)) throw new Error("sintax_error");
 		const result = await Profiles.create({ user_id, name, img });
-		const token = createToken(result.dataValues.id);
+		const token = createToken(user_id, result.dataValues.id);
 		resp.status(200).json({
 			msg: "profile created",
 			token

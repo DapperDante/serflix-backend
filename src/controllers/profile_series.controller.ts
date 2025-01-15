@@ -67,7 +67,7 @@ export const getSerieByProfile = async (req: Request, resp: Response) => {
 		let results = {}
 		if (serieId)
 			results = await getSeriesById(serieId?.dataValues.serie_id);
-		resp.status(200).json({ results });
+		resp.status(200).json({ id: serieId?.dataValues.id, results });
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });

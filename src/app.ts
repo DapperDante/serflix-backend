@@ -12,10 +12,10 @@ import { AuthenticationUser, AuthenticationProfile } from "./middleware/authenti
 dotenv.config();
 class Server {
 	private app: Application;
-	private port: string;
+	private port: number;
 	constructor() {
 		this.app = express();
-		this.port = process.env.LOCAL_PORT!;
+		this.port = Number(process.env.PORT) || 4000;
 		this.listen();
 		this.middleware();
 		this.routes();
@@ -45,6 +45,7 @@ class Server {
 			await db.authenticate();
 			console.log("connect to Database");
 		} catch (err) {
+			console.log(err);
 			console.error("can't connect to Database");
 		}
 	}
