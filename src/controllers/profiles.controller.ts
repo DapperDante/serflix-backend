@@ -13,8 +13,8 @@ export const addProfile = async (req: Request, resp: Response) => {
 		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
 		if (!(name && img)) throw new Error("sintax_error");
 		const result = await Profiles.create({ user_id, name, img });
-		const token = createToken(result.dataValues.id);
-		resp.status(200).json({
+		const token = createToken(user_id, result.dataValues.id);
+		resp.status(201).json({
 			msg: "profile created",
 			token
 		});
@@ -29,16 +29,6 @@ export const logInProfile = async (req: Request, resp: Response) => {
 		const { idUser } = decodeJwt(req.headers["authorization"]!);
 		const token = createToken(idUser, idProfile);
 		resp.status(200).json({msg: 'Profile access', token});
-	}catch(error:any){
-		const {code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
-	}
-}
-export const logOutProfile = async (req: Request, resp: Response) => {
-	try{
-		const { idUser } = decodeJwt(req.headers["authorization"]!);
-		const token = createToken(idUser);
-		resp.status(200).json({msg: 'Profile agress', token});
 	}catch(error:any){
 		const {code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -64,7 +54,7 @@ export const getProfile = async (req: Request, resp: Response) => {
 		const {idProfile} = decodeJwt(req.headers["authorization"]!);
 		const [data, metadata]: [any, unknown] = await sequelize.query(
 			`
-			CALL getProfile(:idProfile);
+			CALL get_profile(:idProfile);
 		`,
 			{
 				replacements: {
@@ -74,7 +64,6 @@ export const getProfile = async (req: Request, resp: Response) => {
 		);
 		let movies = [];
 		let series = [];
-		let goals = [];
 		if (data.movies) {
 			movies = await data.movies.split(",").map(async (value: any) => {
 				return await getMovieById(value);
@@ -84,9 +73,6 @@ export const getProfile = async (req: Request, resp: Response) => {
 			series = await data.series.split(",").map(async (value: any) => {
 				return await getSeriesById(value);
 			});
-		}
-		if(data.goals){
-			goals = data.goals.split(",").map((value:string)=>Number(value))
 		}
 		//This line of code is to wait for all promises to be resolved
 		let results = await Promise.all([...movies, ...series]);
@@ -105,7 +91,7 @@ export const getProfile = async (req: Request, resp: Response) => {
 				type: "serie",
 			};
 		});
-		resp.status(200).json({name: data.name, img: data.img, results, goals});
+		resp.status(200).json({name: data.name, img: data.img, results, goals: data.goals});
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });

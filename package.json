@@ -7,7 +7,7 @@
     "build": "tsc",
     "watch-constant": "nodemon dist/app.js",
     "watch": "wait-on dist/app.js",
-    "start": "npm-run-all --parallel build watch",
+    "start": "npm-run-all --parallel build watch watch-constant",
     "dev": "npm-run-all --parallel build-constant watch watch-constant"
   },
   "keywords": [],

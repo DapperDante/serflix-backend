@@ -10,8 +10,9 @@ export const addFavoriteSerie = async (req: Request, resp: Response) => {
 		const { idSerie: serie_id } = req.body;
 		if (!serie_id) throw new Error("sintax_error");
 		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
-		await sequelize.query(`
-			CALL addSerie(:profile_id, :serie_id, @id);
+		const [data, metadata]: [any, unknown] = await sequelize.query(
+			`
+			CALL add_serie(:profile_id, :serie_id);
 			`, {
 				replacements: {
 					profile_id,
@@ -19,10 +20,10 @@ export const addFavoriteSerie = async (req: Request, resp: Response) => {
 				}
 			}
 		);
-		const [data, metadata]: [any, unknown] = await sequelize.query(`SELECT @id AS id;`);
-		resp.status(200).json({
+		resp.status(201).json({
 			msg: "Serie added",
-			id: data[0].id
+			id: data.id,
+			goal: data?.goal
 		});
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
@@ -67,7 +68,7 @@ export const getSerieByProfile = async (req: Request, resp: Response) => {
 		let results = {}
 		if (serieId)
 			results = await getSeriesById(serieId?.dataValues.serie_id);
-		resp.status(200).json({ results });
+		resp.status(200).json({ id: serieId?.dataValues.id, results });
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -80,7 +81,7 @@ export const deleteFavoriteSerie = async (req: Request, resp: Response) => {
 		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
 		const [data, metadata]: [any[], unknown] = await sequelize.query(
 			`
-			SELECT * FROM profile_movies WHERE id = :id AND profile_id = :profile_id
+			SELECT * FROM profile_series WHERE id = :id AND profile_id = :profile_id
 			`,
 			{
 				replacements: { id, profile_id },

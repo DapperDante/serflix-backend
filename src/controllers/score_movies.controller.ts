@@ -32,15 +32,16 @@ export const addReviewMovie = async (req: Request, resp: Response) => {
 export const getReviewsMovie = async (req: Request, resp: Response) => {
 	try {
 		const { idMovie } = req.params;
+		const { idProfile } = decodeJwt(req.headers["authorization"]!);
 		if (!idMovie) throw new Error("sintax_error");
-		const [data, metadata] = await sequelize.query(
+		const [data, metadata]: [any, unknown] = await sequelize.query(
 			`
-			SELECT score_movies.*, profiles.name FROM score_movies 
-			JOIN profiles ON profiles.id = score_movies.profile_id 
-			AND score_movies.movie_id = :idMovie`,
+				CALL get_score_movies(:idProfile, :idMovie);
+			`,
 			{
 				replacements: {
-					idMovie
+					idMovie,
+					idProfile
 				},
 			}
 		);
