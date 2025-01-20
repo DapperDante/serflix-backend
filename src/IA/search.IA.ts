@@ -75,7 +75,6 @@ const getRankedResponses: any = async (
 			value.response.type = 'original_title' in value.response ? 'movie' : 'serie'
 			return value;
 		});
-		console.log(scores);
 	return scores;
 };
 
@@ -94,12 +93,10 @@ export const getDataToSearch = async (
 	let result = score.map((value) => value.response);
 	await Promise.all(
 		score.map(async (value) => {
-			console.log(value);
 			let aux: any;
 			if('original_name' in value.response){
 				aux = await getSimilarSeries(value.response.id);
 				aux.results.map((value:any) => value.type = 'serie');
-				console.log(aux);
 				result.push(...aux.results);
 				return;
 			}
