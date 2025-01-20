@@ -15,7 +15,7 @@ import {
 dotenv.config();
 class Server {
 	private app: Application;
-	private port: string;
+	private port: number;
 	constructor() {
 		this.app = express();
 		this.port = process.env.DOCKER_PORT
@@ -50,6 +50,7 @@ class Server {
 			await db.authenticate();
 			console.log("connect to Database");
 		} catch (err) {
+			console.log(err);
 			console.error("can't connect to Database");
 		}
 	}
