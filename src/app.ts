@@ -8,14 +8,19 @@ import routerUser from "./routes/user/user.router";
 import routerProfile from "./routes/profile/profile.router";
 import routerReview from "./routes/score/score.router";
 import routerSearch from "./routes/search/search.router";
-import { AuthenticationUser, AuthenticationProfile } from "./middleware/authentication.middleware";
+import {
+	AuthenticationUser,
+	AuthenticationProfile,
+} from "./middleware/authentication.middleware";
 dotenv.config();
 class Server {
 	private app: Application;
 	private port: string;
 	constructor() {
 		this.app = express();
-		this.port = process.env.LOCAL_PORT || 4000;
+		this.port = process.env.DOCKER_PORT
+			? process.env.DOCKER_PORT
+			: process.env.LOCAL_PORT!;
 		this.listen();
 		this.middleware();
 		this.routes();

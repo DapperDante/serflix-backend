@@ -17,7 +17,7 @@
 	}catch{
 		return {
 			code: 500,
-			msg: "Has an ocurred problem"
+			msg: "There was a problem"
 		};
 	}
  }

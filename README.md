@@ -31,9 +31,9 @@ All request have prefix ``/api/`` and its parameters has format camelCase, the n
 || ``/get/:idSerie`` | ``none`` |``id, results[...]``|
 || ``/delete/:id`` | ``none`` |``msg``|
 | ``/score`` | ``/movie/add`` | ``idMovie, score, review`` |``msg``|
-|| ``/movie/get/:idMovie`` | ``none`` |``[...]``|
+|| ``/movie/get/:idMovie`` | ``none`` |``id, avg_score, name, score, results[...]``|
 || ``/serie/add`` | ``idSerie, score, review`` |``msg``|
-|| ``/serie/get/:idSerie`` | ``none`` |``[...]``|
+|| ``/serie/get/:idSerie`` | ``none`` |``id, avg_score, name, score, results[...]``|
 | ``/search`` | ``?query=text&times=number&manyItemsRelation=number`` | ``none`` |``results[]``|
 
 When you request of search you must add queries for IA (tensorflow/tfjs-node and universal-sentence-encoder) can work to research on the data's database:
@@ -58,6 +58,8 @@ To avoid repeat many lines of code and get different results, so there is a file
 ## Environment variables
 
 For this project have to have many environment variables to functionaly, to add those variables you must add new file with extension ``.env`` on root project and have the following:
+
+> If you don't work on docker, discard the docker's variables
 
 ##### LOCAL_PORT
 

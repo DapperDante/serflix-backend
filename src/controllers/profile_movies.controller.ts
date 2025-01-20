@@ -12,9 +12,9 @@ export const addFavoriteMovie = async (req: Request, resp: Response) => {
 		const { idMovie: movie_id } = req.body;
 		if (!movie_id) throw new Error("sintax_error");
 		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
-		await sequelize.query(
+		const [data, metadata]: [any, unknown] = await sequelize.query(
 			`
-			CALL addMovie(:profile_id, :movie_id, @id);
+			CALL add_movie(:profile_id, :movie_id);
 			`,
 			{
 				replacements: {
@@ -23,10 +23,10 @@ export const addFavoriteMovie = async (req: Request, resp: Response) => {
 				}
 			}
 		);
-		const [data, metadata]: [any, unknown] = await sequelize.query(`SELECT @id AS id;`);
-		resp.status(200).json({
+		resp.status(201).json({
 			msg: "Movie added",
-			id: data[0].id,
+			id: data.id,
+			goal: data?.goal
 		});
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
