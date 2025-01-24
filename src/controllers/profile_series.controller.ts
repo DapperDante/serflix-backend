@@ -57,6 +57,16 @@ export const getSerieByProfile = async (req: Request, resp: Response) => {
 	try {
 		const {idSerie: serie_id } = req.params;
 		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
+		await sequelize.query(
+			`
+				CALL add_log_views(:profile_id, :serie_id, 'S');
+			`,{
+				replacements: {
+					profile_id,
+					serie_id,
+				}
+			}
+		);
 		const serieId = await ProfileSeries.findOne({
 			attributes: ["id", "serie_id"],
 			where: {

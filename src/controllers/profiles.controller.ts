@@ -80,13 +80,13 @@ export const getProfile = async (req: Request, resp: Response) => {
 			if ("original_title" in item)
 				return {
 					id: item.id,
-					title: item.original_title,
+					original_title: item.original_title,
 					poster_path: item.poster_path,
 					type: "movie",
 				};
 			return {
 				id: item.id,
-				title: item.original_name,
+				original_name: item.original_name,
 				poster_path: item.poster_path,
 				type: "serie",
 			};

@@ -3,6 +3,8 @@
 	try{
 		console.error(error);
 		switch(error.name){
+			case 'JsonWebTokenError':
+				return ErrorHandlingJwt(error);
 			case 'TokenExpiredError':
 				return ErrorHandlingJwt(error);
 			case 'SequelizeUniqueConstraintError':

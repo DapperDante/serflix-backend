@@ -12,6 +12,7 @@ import {
 	AuthenticationUser,
 	AuthenticationProfile,
 } from "./middleware/authentication.middleware";
+import routerRecommendation from "./routes/recommendation/recommendation.router";
 dotenv.config();
 class Server {
 	private app: Application;
@@ -35,6 +36,7 @@ class Server {
 		this.app.use("/api/user", routerUser);
 		this.app.use("/api/profile", routerProfile);
 		this.app.use("/api/movie", routerMovie);
+		this.app.use("/api/recommendation", routerRecommendation);
 		this.app.use("/api/serie", routerSerie);
 		this.app.use("/api/score", routerReview);
 		this.app.use("/api/search", routerSearch);
@@ -48,9 +50,9 @@ class Server {
 	async database() {
 		try {
 			await db.authenticate();
-			console.log("connect to Database");
+			console.log("Connect to Database");
 		} catch (err) {
-			console.error("can't connect to Database");
+			console.error("Can't connect to Database");
 		}
 	}
 }

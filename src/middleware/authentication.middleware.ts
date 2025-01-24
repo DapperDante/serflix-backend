@@ -37,6 +37,6 @@ export const decodeJwt = (token:string): {
 
 export const createToken = (idUser: number, idProfile?: number): string =>{
 	return jwt.sign({idUser, idProfile}, process.env.SECRET_KEY_TOKEN!, {
-		expiresIn: "1h"
+		expiresIn: "4h"
 	});
 }

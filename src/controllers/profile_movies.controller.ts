@@ -60,6 +60,16 @@ export const getMovieByProfile = async (req: Request, resp: Response) => {
 	try {
 		const { idMovie: movie_id } = req.params;
 		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
+		await sequelize.query(
+			`
+			CALL add_log_views(:profile_id, :movie_id, 'M');
+			`, {
+				replacements: {
+					profile_id,
+					movie_id
+				}
+			}
+		);
 		const movieId = await ProfileMovies.findOne({
 			attributes: ["id", "movie_id"],
 			where: {
@@ -77,7 +87,6 @@ export const getMovieByProfile = async (req: Request, resp: Response) => {
 		resp.status(code).json({ msg });
 	}
 };
-
 export const deleteFavoriteMovie = async (req: Request, resp: Response) => {
 	try {
 		const { id } = req.params;
