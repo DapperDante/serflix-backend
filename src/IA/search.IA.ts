@@ -78,7 +78,7 @@ const getRankedResponses: any = async (
 	return scores;
 };
 
-export const getDataToSearch = async (
+export const getDataOfSearch = async (
 	query: any,
 	times: number,
 	manyRelationMovies: number

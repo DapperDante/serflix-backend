@@ -5,6 +5,7 @@ import {
 	ErrorControl
 } from "../error/error-handling";
 import { decodeJwt } from "../middleware/authentication.middleware";
+import { QueryTypes } from "sequelize";
 export const addReviewSerie = async (req: Request, resp: Response) => {
 	try {
 		const {
@@ -19,9 +20,9 @@ export const addReviewSerie = async (req: Request, resp: Response) => {
 			profile_id,
 			serie_id,
 			score,
-			review,
+			review
 		});
-		resp.status(200).json({
+		resp.status(201).json({
 			msg: "Review created",
 		});
 	} catch (error: any) {
@@ -33,8 +34,7 @@ export const getReviewsSerie = async (req: Request, resp: Response) => {
 	try {
 		const { idSerie } = req.params;
 		const {idProfile} = decodeJwt(req.headers["authorization"]!);
-		if (!idSerie) throw new Error("sintax_error");
-		const [data, metadata]: [any, unknown] = await sequelize.query(
+		const [query]: any = await sequelize.query(
 			`
 				CALL get_score_series(:idProfile, :idSerie);
 			`,
@@ -43,9 +43,15 @@ export const getReviewsSerie = async (req: Request, resp: Response) => {
 					idProfile,
 					idSerie
 				},
+				type: QueryTypes.SELECT
 			}
 		);
-		resp.status(200).json(data);
+		const resultEndPoint = {
+			review: query['0'].review,
+			avg_score: query['0'].avg_score,
+			results: query['0'].results
+		}
+		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });

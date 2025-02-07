@@ -1,72 +1,43 @@
-import { Movies } from "../api/movies.api";
+import axios from 'axios';
 
+const instance = axios.create({
+	baseURL: `${process.env.API_TMDB}`,
+	headers: {
+		Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
+	},
+});
+instance.interceptors.response.use(
+	function (response: any) {
+		return response.data;
+	},
+	function (error) {
+		return error;
+	}
+)
 export const getMovieById = async (idMovie: number | string ):Promise<any> => {
-	return await (await fetch(`${process.env.API_TMDB}/movie/${idMovie}?language=US`, {
-		method: "GET",
-		headers: {
-			Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-		}
-	})).json();
+	return instance.get<any>(`/movie/${idMovie}?language=US&page=1`);
 }
 export const getMovieWithRecommendationById = async (idMovie: number | string):Promise<any> => {
-	return await (await fetch(`${process.env.API_TMDB}/movie/${idMovie}?append_to_response=recommendations&language=US`, {
-		method: "GET",
-		headers:
-		{
-			Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-		}
-	})).json();
+	return instance.get<any>(`/movie/${idMovie}?append_to_response=recommendations&language=US`);
+}
+export const getMovieWithExtras = async (idMovie: number | string):Promise<any> => {
+	return instance.get<any>(`/movie/${idMovie}?append_to_response=videos%2Cimages%2Ccredits%2Csimilar%2Crecommendations&language=en-US`);
 }
 export const getRecommendationByMovie = async (idMovie: number | string):Promise<any> => {
-	return await (await fetch(`${process.env.API_TMDB}/movie/${idMovie}/recommendations?language=US&page=1`, {
-		method: "GET",
-		headers: {
-			Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-		}
-	})).json();
+	return instance.get<any>(`/movie/${idMovie}/recommendations?language=US&page=1`);
 }
-export const getMoviesPopular = async (page: number | string = 1) => {
-	return await (await fetch(
-		`${process.env.API_TMDB}/movie/now_playing?language=US&page=${page}`,
-		{
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		}
-	)).json();
+export const getMoviesNowPlaying = async (page: number | string = 1):Promise<any> => {
+	return instance.get<any>(`/movie/now_playing?language=US&page=${page}`);
 };
-export const getMoviesTopRated = async (page: number | string = 1) => {
-	return await (await fetch(
-		`${process.env.API_TMDB}/movie/top_rated?language=US&page=${page}`,
-		{
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		}
-	)).json();
-};
-export const getSimilarMovie = async (idMovie: number | string) => {
-	return await ( await fetch(
-		`${process.env.API_TMDB}/movie/${idMovie}/similar?language=US&page=1`,
-		{
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		}
-	)).json();
+export const getMoviesPopular = async (page: number | string = 1):Promise<any> => {	
+	return instance.get<any>(`/movie/popular?language=US&page=${page}`);
 }
-
-export const getMoviesByTitle = async (title: string): Promise<Movies> => {
-		return await ( await fetch(
-			`${process.env.API_TMDB}/search/movie?query=${title}&include_adult=false&language=en-US&page=1`,
-			{
-				method: "GET",
-				headers: {
-					Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-				},
-			}
-		)).json();
-	}
+export const getMoviesTopRated = async (page: number | string = 1):Promise<any> => {
+	return instance.get<any>(`/movie/top_rated?language=US&page=${page}`);
+};
+export const getSimilarMovie = async (idMovie: number | string):Promise<any> => {
+	return instance.get<any>(`/movie/${idMovie}/similar?language=US&page=1`)
+};
+export const getMoviesByTitle = async (title: string): Promise<any> => {
+	return instance.get<any>(`/search/movie?query=${title}&include_adult=false&language=en-US&page=1`);
+};

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ErrorControl } from "../error/error-handling";
 export const AuthenticationUser = (req:Request<any>, res:Response<any>, next:NextFunction) => {
-	if(req.url.includes('/api/user')) return next();
+	if(req.url.includes('/api/user/login') || req.url.includes('/api/user/register')) return next();
 	const token = req.headers['authorization'];
 	try{
 		jwt.verify(token!, process.env.SECRET_KEY_TOKEN!);

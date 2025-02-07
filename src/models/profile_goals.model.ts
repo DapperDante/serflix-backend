@@ -1,8 +1,10 @@
 import { DataTypes } from "sequelize";
-import db from "../db/connection";
+import sequelize from "../db/connection";
 import Profiles from "./profiles.model";
-const ProfileMovies = db.define(
-	"profile_movies",
+import Goals from "./goals.model";
+
+const ProfileGoals = sequelize.define(
+	"profile_goals",
 	{
 		id: {
 			type: DataTypes.NUMBER,
@@ -12,26 +14,24 @@ const ProfileMovies = db.define(
 		},
 		profile_id: {
 			type: DataTypes.NUMBER,
-			allowNull: false,
 			references: {
 				model: Profiles,
 				key: "id",
 			},
-		},
-		movie_id: {
-			type: DataTypes.NUMBER,
 			allowNull: false,
 		},
-		delete_at: {
-			type: DataTypes.TIME
+		goal_id: {
+			type: DataTypes.NUMBER,
+			references: {
+				model: Goals,
+				key: "id",
+			},
+			allowNull: false,
 		},
 	},
 	{
-		paranoid: true,
 		createdAt: false,
 		updatedAt: false,
-		deletedAt: "delete_at",
-		timestamps: true
 	}
 );
-export default ProfileMovies;
+export default ProfileGoals;

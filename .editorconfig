@@ -3,4 +3,4 @@ root = true
 [*.ts]
 indent_style = tab
 indent_size = 2
-max_line_of_length = 170
+max_line_of_length = 190
