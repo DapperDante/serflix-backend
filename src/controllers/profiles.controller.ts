@@ -2,22 +2,26 @@ import { Request, Response } from "express";
 import Profiles from "../models/profiles.model";
 import sequelize from "../db/connection";
 import { getMovieById } from "../tmdb_api/movies.tmdb";
-import { getSeriesById } from "../tmdb_api/series.tmdb";
+import { getSerieById } from "../tmdb_api/series.tmdb";
 import {
 	ErrorControl
 } from "../error/error-handling";
 import { createToken, decodeJwt } from "../middleware/authentication.middleware";
+import { QueryTypes } from "sequelize";
+
 export const addProfile = async (req: Request, resp: Response) => {
 	try {
 		const { name, img } = req.body;
+		if (!(name && img)) 
+			throw new Error("sintax_error");
 		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
-		if (!(name && img)) throw new Error("sintax_error");
-		const result = await Profiles.create({ user_id, name, img });
-		const token = createToken(user_id, result.dataValues.id);
-		resp.status(201).json({
+		const query = await Profiles.create({ user_id, name, img });
+		const token = createToken(user_id, query.dataValues.id);
+		const resultEndPoint = {
 			msg: "profile created",
 			token
-		});
+		}
+		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -26,9 +30,15 @@ export const addProfile = async (req: Request, resp: Response) => {
 export const logInProfile = async (req: Request, resp: Response) => {
 	try{
 		const { idProfile } = req.body;
+		if(!idProfile) 
+			throw new Error("sintax_error");
 		const { idUser } = decodeJwt(req.headers["authorization"]!);
 		const token = createToken(idUser, idProfile);
-		resp.status(200).json({msg: 'Profile access', token});
+		const resultEndPoint = {
+			msg: "Profile access",
+			token
+		};
+		resp.status(200).json(resultEndPoint);
 	}catch(error:any){
 		const {code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -37,13 +47,16 @@ export const logInProfile = async (req: Request, resp: Response) => {
 export const getProfiles = async (req: Request, resp: Response) => {
 	try {
 		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
-		const results = await Profiles.findAll({
+		const query = await Profiles.findAll({
 			attributes: ["id", "name", "img"],
 			where: {
 				user_id,
 			},
 		});
-		resp.status(200).json({ results });
+		const resultEndPoint = {
+			results: query
+		}
+		resp.status(200).json(resultEndPoint);
 	} catch (error:any) {
 		const {code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -52,7 +65,7 @@ export const getProfiles = async (req: Request, resp: Response) => {
 export const getProfile = async (req: Request, resp: Response) => {
 	try {
 		const {idProfile} = decodeJwt(req.headers["authorization"]!);
-		const [data, metadata]: [any, unknown] = await sequelize.query(
+		const [query]: any[] = await sequelize.query(
 			`
 			CALL get_profile(:idProfile);
 		`,
@@ -60,38 +73,16 @@ export const getProfile = async (req: Request, resp: Response) => {
 				replacements: {
 					idProfile
 				},
+				type: QueryTypes.SELECT
 			}
 		);
-		let movies = [];
-		let series = [];
-		if (data.movies) {
-			movies = await data.movies.split(",").map(async (value: any) => {
-				return await getMovieById(value);
-			});
+		const result = {
+			name: query['0'].name,
+			img: query['0'].img,
+			results: await embeddingItemsFavorite(query['0'].movies, query['0'].series),
+			goals: query['0'].goals,
 		}
-		if (data.series) {
-			series = await data.series.split(",").map(async (value: any) => {
-				return await getSeriesById(value);
-			});
-		}
-		//This line of code is to wait for all promises to be resolved
-		let results = await Promise.all([...movies, ...series]);
-		results = results.map((item) => {
-			if ("original_title" in item)
-				return {
-					id: item.id,
-					title: item.original_title,
-					poster_path: item.poster_path,
-					type: "movie",
-				};
-			return {
-				id: item.id,
-				title: item.original_name,
-				poster_path: item.poster_path,
-				type: "serie",
-			};
-		});
-		resp.status(200).json({name: data.name, img: data.img, results, goals: data.goals});
+		resp.status(200).json(result);
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
@@ -100,23 +91,50 @@ export const getProfile = async (req: Request, resp: Response) => {
 export const updateProfile = async (req: Request, resp: Response) => {
 	try {
 		const { name, img } = req.body;
-		const { idProfile: id } = decodeJwt(req.headers["authorization"]!);
 		if (!(name || img)) {
 			throw new Error("sintax_error");
 		}
+		const { idProfile: id } = decodeJwt(req.headers["authorization"]!);
+		let msg: string;
 		if (name) {
 			await Profiles.update({ name }, { where: { id } });
-			resp.status(200).json({
-				msg: "Name updated",
-			});
-			return;
+			msg = "Name updated";
+		}else{
+			await Profiles.update({ img }, { where: { id } });
+			msg = "Image updated";
 		}
-		await Profiles.update({ img }, { where: { id } });
-		resp.status(200).json({
-			msg: "Image updated",
-		});
+		const resultEndPoint = {
+			msg
+		}
+		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
 		const { code, msg } = ErrorControl(error);
 		resp.status(code).json({ msg });
 	}
 };
+const embeddingItemsFavorite = async(movies: any[], series: any[]): Promise<any[]>=>{
+	if(!movies?.length)
+		movies = [];
+	if(!series?.length)
+		series = [];
+	return (await Promise.all(
+		[
+			...movies.map(movie=>getMovieById(movie.id)),
+			...series.map(serie=>getSerieById(serie.id))
+		]
+	)).map((item)=>{
+		if("original_title" in item)
+			return {
+				id: item.id,
+				original_title: item.original_title,
+				poster_path: item.poster_path,
+				type: "movie"
+			}
+		return {
+			id: item.id,
+			original_name: item.original_name,
+			poster_path: item.poster_path,
+			type: "serie"
+		}
+	});
+}

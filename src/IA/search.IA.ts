@@ -1,7 +1,7 @@
 import * as tf from "@tensorflow/tfjs-node";
 import * as encoder from "@tensorflow-models/universal-sentence-encoder";
 import { Movie } from "../api/movies.api";
-import { getMoviePopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
+import { getMoviesPopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
 import { getSeriesPopular, getSimilarSeries } from "../tmdb_api/series.tmdb";
 import { Serie } from "../api/series.api";
 tf.setBackend("tensorflow");
@@ -36,7 +36,7 @@ const getRankedResponses: any = async (
 	let aux;
 	// get infomation of series and movies
 	for (let i = 0; i < times; i++) {
-		aux = await getMoviePopular(i + 1);
+		aux = await getMoviesPopular(i + 1);
 		movies.push(...aux.results);
 	}
 	for (let i = 0; i < times; i++) {
@@ -78,7 +78,7 @@ const getRankedResponses: any = async (
 	return scores;
 };
 
-export const getDataToSearch = async (
+export const getDataOfSearch = async (
 	query: any,
 	times: number,
 	manyRelationMovies: number

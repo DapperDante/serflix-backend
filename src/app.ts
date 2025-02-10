@@ -1,6 +1,5 @@
-import express, { Application } from "express";
+import express from "express";
 import routerMovie from "./routes/movie/movie.router";
-import dotenv from "dotenv";
 import routerSerie from "./routes/serie/serie.router";
 import db from "./db/connection";
 import cors from "cors";
@@ -12,47 +11,51 @@ import {
 	AuthenticationUser,
 	AuthenticationProfile,
 } from "./middleware/authentication.middleware";
-dotenv.config();
+import routerRecommendation from "./routes/recommendation/recommendation.router";
+import helmet from "helmet";
+import compression from "compression";
+import { ENV_SETUP } from "./config/variables-env";
+
+const app = express();
+
 class Server {
-	private app: Application;
-	private port: number;
 	constructor() {
-		this.app = express();
-		this.port = process.env.DOCKER_PORT
-			? process.env.DOCKER_PORT
-			: process.env.LOCAL_PORT!;
-		this.listen();
+		if(!ENV_SETUP.NODE_ENV?.includes("testing"))
+			this.listen();
 		this.middleware();
 		this.routes();
 		this.database();
 	}
-	listen() {
-		this.app.listen(this.port, () => {
-			console.log(`Project on the port ${this.port}`);
+	routes() {
+		app.use("/api/user", routerUser);
+		app.use("/api/profile", routerProfile);
+		app.use("/api/movie", routerMovie);
+		app.use("/api/recommendation", routerRecommendation);
+		app.use("/api/serie", routerSerie);
+		app.use("/api/score", routerReview);
+		app.use("/api/search", routerSearch);
+	}
+	listen(){
+		app.listen(ENV_SETUP.PORT, () => {
+			console.log(`Server running on port ${ENV_SETUP.PORT}`);
 		});
 	}
-	routes() {
-		this.app.use("/api/user", routerUser);
-		this.app.use("/api/profile", routerProfile);
-		this.app.use("/api/movie", routerMovie);
-		this.app.use("/api/serie", routerSerie);
-		this.app.use("/api/score", routerReview);
-		this.app.use("/api/search", routerSearch);
-	}
 	middleware() {
-		this.app.use(cors());
-		this.app.use(express.json());
-		this.app.use(AuthenticationUser);
-		this.app.use(AuthenticationProfile);
+		app.use(cors());
+		app.use(express.json());
+		app.use(helmet());
+		app.use(compression());
+		app.use(AuthenticationUser);
+		app.use(AuthenticationProfile);
 	}
 	async database() {
 		try {
 			await db.authenticate();
-			console.log("connect to Database");
+			console.log("Connect to Database");
 		} catch (err) {
-			console.log(err);
-			console.error("can't connect to Database");
+			console.error("Can't connect to Database");
 		}
 	}
 }
 new Server();
+export default app;

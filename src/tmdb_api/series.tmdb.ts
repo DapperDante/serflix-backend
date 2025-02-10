@@ -1,47 +1,40 @@
-export const getSeriesById = async (idSerie: number | string): Promise<any> => {
-	return (
-		await fetch(`${process.env.API_TMDB}/tv/${idSerie}?language=US`, {
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		})
-	).json();
+import axios from "axios";
+
+const instance = axios.create({
+	baseURL: `${process.env.API_TMDB}`,
+	headers: {
+		Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
+	},
+});
+instance.interceptors.response.use(
+	function(response:any){
+		return response.data;
+	},
+	function (error) {
+		return error;
+	}
+)
+export const getSerieById = async (idSerie: number | string): Promise<any> => {
+	return instance.get<any>(`/tv/${idSerie}?language=US`);
 };
-export const getSeriesPopular = async (
-	page: number | string = 1
-): Promise<any> => {
-	return (
-		await fetch(`${process.env.API_TMDB}/tv/popular?language=US&page=${page}`, {
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		})
-	).json();
+export const getSerieWithExtras = async (idSerie: number | string) => {
+	return instance.get<any>(`/tv/${idSerie}?append_to_response=videos%2Cimages%2Ccredits%2Csimilar%2Crecommendations&language=en-US`);
+}
+export const getSerieWithRecommendationById = async (idSerie: number | string):Promise<any> => {
+	return instance.get<any>(`/tv/${idSerie}?append_to_response=recommendations&language=US`);
+}
+export const getRecommendationBySerie = async (idSerie: number | string): Promise<any> => {
+	return instance.get<any>(`/tv/${idSerie}/recommendations?language=US`);
+}
+export const getSeriesPopular = async (page: number | string = 1): Promise<any> => {
+	return instance.get<any>(`/tv/popular?language=US&page=${page}`);
+};
+export const getSeriesAiringToday = async (page: number | string = 1): Promise<any> => {
+	return instance.get<any>(`/tv/airing_today?language=US&page=${page}`);
+}
+export const getSimilarSeries = async (idSerie: number | string): Promise<any> => {
+	return instance.get<any>(`/tv/${idSerie}/similar?language=US`);
 };
 export const getSeriesByTitle = async (title: string): Promise<any> => {
-	return (
-		await fetch(
-			`${process.env.API_TMDB}/search/tv?language=US&query=${title}`,
-			{
-				method: "GET",
-				headers: {
-					Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-				},
-			}
-		)
-	).json();
-};
-export const getSimilarSeries = async (
-	idSerie: number | string
-): Promise<any> => {
-	return (
-		await fetch(`${process.env.API_TMDB}/tv/${idSerie}/similar?language=US`, {
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
-			},
-		})
-	).json();
+	return instance.get<any>(`/search/tv?language=US&query=${title}`);
 };
