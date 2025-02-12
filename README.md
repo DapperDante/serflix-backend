@@ -66,7 +66,7 @@ For this project have to have many environment variables to functionaly, to add 
 
 This is most important because asign rol, the only values are 'development', 'testing' and 'production'
 
-##### LOCAL_PORT
+##### PORT
 
 This variables is you can communicate to the backend, you could put `3000` or any value
 
