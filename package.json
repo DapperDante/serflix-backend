@@ -8,8 +8,7 @@
     "start": "wait-on dist/src/app.js",
     "start:watch": "nodemon dist/src/app.js",
     "prod": "nodemon --exec \npm run build && start\"",
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "test": "jest --runInBand"
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts"
   },
   "keywords": [],
   "author": "DapperDante",
