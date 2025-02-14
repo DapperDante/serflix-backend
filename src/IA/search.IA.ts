@@ -4,7 +4,6 @@ import { Movie } from "../api/movies.api";
 import { getMoviesPopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
 import { getSeriesPopular, getSimilarSeries } from "../tmdb_api/series.tmdb";
 import { Serie } from "../api/series.api";
-tf.setBackend("tensorflow");
 interface searchData {
 	response: Movie & Serie;
 	score: number;
