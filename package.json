@@ -4,9 +4,7 @@
   "main": "dist/app.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/src/app.js",
-    "start:watch": "nodemon dist/src/app.js",
-    "prod": "nodemon --exec \npm run build && start\"",
+    "start": "tsc && node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts"
   },
   "keywords": [],
