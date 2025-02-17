@@ -30,7 +30,7 @@ jobs:
           npm ci install --only=production
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./dist package.json node_modules -r
+        run: zip -r release.zip dist package.json node_modules
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
