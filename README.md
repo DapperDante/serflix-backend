@@ -113,3 +113,7 @@ It's to encrypte the passwords with system AES
 ##### SECRET_KEY_TOKEN
 
 It's to transform data of user with JWS
+
+### Common problems
+ 
+If you have problem like `Not found backend` (don't care), To resolve this problem you navigate to node_modules where it's @tensorflow\tfjs-node\lib\napi-v9 and move tensorflow.dll from this directory to ../napi-v8, finally reset your backend.

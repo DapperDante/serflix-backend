@@ -1,4 +1,3 @@
-import * as tf from "@tensorflow/tfjs-node";
 import * as encoder from "@tensorflow-models/universal-sentence-encoder";
 import { Movie } from "../api/movies.api";
 import { getMoviesPopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
