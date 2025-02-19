@@ -59,5 +59,5 @@ jobs:
         with:
           app-name: 'server-serflix'
           slot-name: 'Production'
-          package: .
+          package: '*'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8128A96E846743FEA0D4EDDA6E5F1286 }}
