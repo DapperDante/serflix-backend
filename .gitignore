@@ -1,3 +1,8 @@
 /dist/*
 .env
 node_modules
+
+# Testing
+/__test__/*
+jest.config.js
+jest.setup.js

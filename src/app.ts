@@ -20,8 +20,7 @@ const app = express();
 
 class Server {
 	constructor() {
-		if(!ENV_SETUP.NODE_ENV?.includes("testing"))
-			this.listen();
+		if (!ENV_SETUP.NODE_ENV?.includes("testing")) this.listen();
 		this.middleware();
 		this.routes();
 		this.database();
@@ -35,7 +34,7 @@ class Server {
 		app.use("/api/score", routerReview);
 		app.use("/api/search", routerSearch);
 	}
-	listen(){
+	listen() {
 		app.listen(ENV_SETUP.PORT, () => {
 			console.log(`Server running on port ${ENV_SETUP.PORT}`);
 		});

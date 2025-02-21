@@ -4,7 +4,7 @@ configDotenv();
 
 export const ENV_SETUP = {
 	NODE_ENV: process.env.NODE_ENV,
-	PORT : Number(process.env.DOCKER_PORT ? process.env.DOCKER_PORT : process.env.LOCAL_PORT),
+	PORT : Number(process.env.DOCKER_PORT ? process.env.DOCKER_PORT : process.env.PORT) || 3000,
 	DB_NAME : process.env.DB_NAME,
 	DB_USER : process.env.DB_USER,
 	DB_PASSWORD : process.env.DB_PASSWORD,
