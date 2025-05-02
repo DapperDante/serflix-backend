@@ -1,70 +1,106 @@
-import { Request, Response } from "express";
-import Profiles from "../models/profiles.model";
-import sequelize from "../db/connection";
+import { NextFunction, Request, Response } from "express";
 import { getMovieById } from "../tmdb_api/movies.tmdb";
 import { getSerieById } from "../tmdb_api/series.tmdb";
-import {
-	ErrorControl
-} from "../error/error-handling";
-import { createToken, decodeJwt } from "../middleware/authentication.middleware";
 import { QueryTypes } from "sequelize";
+import { createTokenLogProfile, decodeTokenLogProfile, decodeTokenLogUser } from "../config/token.config";
+import { QueryError, SpError, SyntaxError } from "../error/errors";
+import { spApi } from "../interface/sp.api";
+import sequelize from "../db/connection";
+import { Encrypt, VerifyPassword } from "../encryptation/Encryptation";
 
-export const addProfile = async (req: Request, resp: Response) => {
+export const addProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { name, img } = req.body;
 		if (!(name && img)) 
-			throw new Error("sintax_error");
-		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
-		const query = await Profiles.create({ user_id, name, img });
-		const token = createToken(user_id, query.dataValues.id);
+			throw new SyntaxError("name and img is required");
+		const { idUser, email} = decodeTokenLogUser(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`CALL add_profile(:idUser, :name, :img);`,
+			{
+				replacements: {
+					idUser,
+					name,
+					img
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const token = createTokenLogProfile(idUser, email, resultSp.result.id);
 		const resultEndPoint = {
 			msg: "profile created",
 			token
 		}
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const logInProfile = async (req: Request, resp: Response) => {
+export const logInProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try{
-		const { idProfile } = req.body;
+		const { idProfile, password } = req.body;
 		if(!idProfile) 
-			throw new Error("sintax_error");
-		const { idUser } = decodeJwt(req.headers["authorization"]!);
-		const token = createToken(idUser, idProfile);
+			throw new SyntaxError("idProfile is required");
+		const { idUser, email } = decodeTokenLogUser(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			SELECT password FROM profiles 
+			LEFT JOIN profile_password AS p_password ON p_password.profile_id = profiles.id
+			WHERE profiles.id = :idProfile AND user_id = :idUser;
+			`, 
+			{
+				replacements: {
+					idProfile,
+					idUser
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		console.log(query);
+		if(!query)
+			throw new QueryError("Profile not found");
+		if(query?.password)
+			VerifyPassword(password, query?.password);
+		const token = createTokenLogProfile(idUser, email, idProfile);
 		const resultEndPoint = {
 			msg: "Profile access",
 			token
 		};
 		resp.status(200).json(resultEndPoint);
 	}catch(error:any){
-		const {code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 }
-export const getProfiles = async (req: Request, resp: Response) => {
+export const getProfiles = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idUser: user_id } = decodeJwt(req.headers["authorization"]!);
-		const query = await Profiles.findAll({
-			attributes: ["id", "name", "img"],
-			where: {
-				user_id,
-			},
-		});
+		const { idUser } = decodeTokenLogUser(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL get_all_profiles(:idUser);
+			`,
+			{
+				replacements: {
+					idUser
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;	
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		const resultEndPoint = {
-			results: query
+			results: resultSp.result
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error:any) {
-		const {code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const getProfile = async (req: Request, resp: Response) => {
+export const getProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const {idProfile} = decodeJwt(req.headers["authorization"]!);
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL get_profile(:idProfile);
@@ -76,31 +112,57 @@ export const getProfile = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT
 			}
 		);
-		const result = {
-			name: query['0'].name,
-			img: query['0'].img,
-			results: await embeddingItemsFavorite(query['0'].movies, query['0'].series),
-			goals: query['0'].goals,
+		const resultSp = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const { name, img, movies, series, goals, plan, password } = resultSp.result;
+		const resultEndPoint = {
+			name,
+			img,
+			results: await embeddingItemsFavorite(movies, series),
+			goals,
+			plan,
+			password: password ? true : false
 		}
-		resp.status(200).json(result);
+		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const updateProfile = async (req: Request, resp: Response) => {
+export const updateProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { name, img } = req.body;
-		if (!(name || img)) {
-			throw new Error("sintax_error");
-		}
-		const { idProfile: id } = decodeJwt(req.headers["authorization"]!);
+		if (!(name || img)) 
+			throw new SyntaxError("name or img is required");
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
 		let msg: string;
 		if (name) {
-			await Profiles.update({ name }, { where: { id } });
+			await sequelize.query(
+				`
+				UPDATE profiles SET name = :name WHERE profile_id = :idProfile;
+				`,
+				{
+					replacements: {
+						name,
+						idProfile
+					},
+					type: QueryTypes.RAW
+				}
+			);
 			msg = "Name updated";
 		}else{
-			await Profiles.update({ img }, { where: { id } });
+			await sequelize.query(
+				`
+				UPDATE profiles SET img = :img WHERE profile_id = :idProfile;
+				`,
+				{
+					replacements: {
+						img,
+						idProfile
+					},
+					type: QueryTypes.RAW
+				}
+			);
 			msg = "Image updated";
 		}
 		const resultEndPoint = {
@@ -108,8 +170,92 @@ export const updateProfile = async (req: Request, resp: Response) => {
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
+	}
+};
+export const addPasswordProfile = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { password } = req.body;
+		if(!password)
+			throw new SyntaxError("password is required");
+		const passwordEncrypted = Encrypt(password);
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL add_profile_password(:idProfile, :passwordEncrypted);
+			`,
+			{
+				replacements: {
+					idProfile,
+					passwordEncrypted
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "Password updated"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const udpatePasswordProfile = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { password } = req.body;
+		if(!password)
+			throw new SyntaxError("password is required");
+		const passwordEncrypted = Encrypt(password);
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL update_profile_password(:idProfile, :passwordEncrypted);
+			`,
+			{
+				replacements: {
+					idProfile,
+					passwordEncrypted
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "Password updated"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error){
+
+	}
+};
+export const deletePasswordProfile = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL delete_profile_password(:idProfile);
+			`,
+			{
+				replacements: {
+					idProfile
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "Password deleted"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
 	}
 };
 const embeddingItemsFavorite = async(movies: any[], series: any[]): Promise<any[]>=>{
@@ -137,4 +283,4 @@ const embeddingItemsFavorite = async(movies: any[], series: any[]): Promise<any[
 			type: "serie"
 		}
 	});
-}
+};

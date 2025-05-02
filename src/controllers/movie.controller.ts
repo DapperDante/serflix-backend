@@ -1,20 +1,18 @@
-import { Request, Response } from "express";
-import ProfileMovies from "../models/profile_movies.model";
+import { NextFunction, Request, Response } from "express";
 import { getMovieById, getMovieWithExtras } from "../tmdb_api/movies.tmdb";
-import {
-	ErrorControl
-} from "../error/error-handling";
-import sequelize from "../db/connection";
-import { decodeJwt } from "../middleware/authentication.middleware";
 import { QueryTypes } from "sequelize";
+import { decodeTokenLogProfile } from "../config/token.config";
+import { spApi } from "../interface/sp.api";
+import { SpError, SyntaxError } from "../error/errors";
+import sequelize from "../db/connection";
 
-export const addFavoriteMovie = async (req: Request, resp: Response) => {
+export const addFavoriteMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idMovie } = req.body;
 		if (!idMovie) 
-			throw new Error("sintax_error");
-		const { idProfile } = decodeJwt(req.headers["authorization"]!);
-		const [data]: any[] = await sequelize.query(
+			throw new SyntaxError("idMovie is required");
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any[] = await sequelize.query(
 			`
 			CALL add_movie(:idProfile, :idMovie);
 			`,
@@ -26,43 +24,52 @@ export const addFavoriteMovie = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT,
 			}
 		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		const resultEndPoint = {
 			msg: "Movie added",
-			goal: data['0'].goal || null
+			goal: resultSp.result.goal || null
 		}
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
 
-export const getMoviesByProfile = async (req: Request, resp: Response) => {
+export const getMoviesByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
-		const moviesId = await ProfileMovies.findAll({
-			attributes: ["movie_id"],
-			where: {
-				profile_id
-			},
-		});
-		moviesId.map(async (movie) => await getMovieById(movie.dataValues.movie_id));
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL get_all_movies(:idProfile);
+			`,
+			{
+				replacements: {
+					idProfile
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const moviesId = resultSp.result.map(async (movie: {movie_id: number}) => await getMovieById(movie.movie_id));
 		const entertaiment = await Promise.all(moviesId);
 		const resultEndPoint = {
 			results: entertaiment,
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error)
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
 
-export const getMovieByProfile = async (req: Request, resp: Response) => {
+export const getMovieByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idMovie } = req.params;
-		const { idProfile } = decodeJwt(req.headers["authorization"]!);
-		const [data]: any[] = await sequelize.query(
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any[] = await sequelize.query(
 			`
 			CALL get_movie(:idProfile, :idMovie);
 			`, {
@@ -73,31 +80,32 @@ export const getMovieByProfile = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT,
 			}
 		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code && resultSp.error_code != 1329)
+			throw new SpError(resultSp.message);
 		let resultEndPoint = {
 			result: await getMovieWithExtras(idMovie),
-			is_favorite: Object.values(data).length ? true : false
+			is_favorite: resultSp.result ? true : false
 		};
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const deleteFavoriteMovie = async (req: Request, resp: Response) => {
+export const deleteFavoriteMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idMovie:movie_id } = req.params;
-		const { idProfile:profile_id } = decodeJwt(req.headers["authorization"]!);
-		await ProfileMovies.destroy({
-			where: {
-				profile_id,
-				movie_id,
-			}
-		});
+		const { idProfile:profile_id } = decodeTokenLogProfile(req.headers["authorization"]!);
+		// await ProfileMovies.destroy({
+		// 	where: {
+		// 		profile_id,
+		// 		movie_id,
+		// 	}
+		// });
 		resp.status(200).json({
 			msg: "delete successful",
 		});
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };

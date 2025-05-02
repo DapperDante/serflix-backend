@@ -1,8 +1,8 @@
 import * as encoder from "@tensorflow-models/universal-sentence-encoder";
-import { Movie } from "../api/movies.api";
+import { Movie } from "../interface/movies.api";
 import { getMoviesPopular, getSimilarMovie } from "../tmdb_api/movies.tmdb";
 import { getSeriesPopular, getSimilarSeries } from "../tmdb_api/series.tmdb";
-import { Serie } from "../api/series.api";
+import { Serie } from "../interface/series.api";
 interface searchData {
 	response: Movie & Serie;
 	score: number;

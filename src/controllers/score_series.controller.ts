@@ -1,12 +1,10 @@
-import { Request, Response } from "express";
-import ScoreSeries from "../models/score_series.model";
 import sequelize from "../db/connection";
-import {
-	ErrorControl
-} from "../error/error-handling";
-import { decodeJwt } from "../middleware/authentication.middleware";
+import { NextFunction, Request, Response } from "express";
 import { QueryTypes } from "sequelize";
-export const addReviewSerie = async (req: Request, resp: Response) => {
+import { decodeTokenLogProfile } from "../config/token.config";
+import { SpError, SyntaxError } from "../error/errors";
+import { spApi } from "../interface/sp.api";
+export const addReviewSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const {
 			idSerie: serie_id,
@@ -14,29 +12,38 @@ export const addReviewSerie = async (req: Request, resp: Response) => {
 			review,
 		} = req.body;
 		if (!(serie_id && score && review))
-			throw new Error("sintax_error");
-		const {idProfile:profile_id} = decodeJwt(req.headers["authorization"]!);
-		await ScoreSeries.create({
-			profile_id,
-			serie_id,
-			score,
-			review
-		});
+			throw new SyntaxError("idSerie, score and review are required");
+		const {idProfile:profile_id} = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any = await sequelize.query(
+			`
+			CALL add_score_serie(:profile_id, :serie_id, :score, :review);
+			`, {
+				replacements: {
+					profile_id,
+					serie_id,
+					score,
+					review
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		resp.status(201).json({
 			msg: "Review created",
 		});
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const getReviewsSerie = async (req: Request, resp: Response) => {
+export const getReviewsSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idSerie } = req.params;
-		const {idProfile} = decodeJwt(req.headers["authorization"]!);
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
 		const [query]: any = await sequelize.query(
 			`
-				CALL get_score_series(:idProfile, :idSerie);
+				CALL get_score_serie(:idProfile, :idSerie);
 			`,
 			{
 				replacements: {
@@ -46,14 +53,16 @@ export const getReviewsSerie = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT
 			}
 		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		const resultEndPoint = {
-			review: query['0'].review,
-			avg_score: query['0'].avg_score,
-			results: query['0'].results
+			its_score: resultSp.result.its_score,
+			avg_score: resultSp.result.avg_score,
+			scores: resultSp.result.scores
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };

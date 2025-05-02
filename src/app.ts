@@ -1,3 +1,5 @@
+import '@tensorflow/tfjs-node';
+import * as encoder from "@tensorflow-models/universal-sentence-encoder";
 import express from "express";
 import routerMovie from "./routes/movie/movie.router";
 import routerSerie from "./routes/serie/serie.router";
@@ -7,20 +9,23 @@ import routerUser from "./routes/user/user.router";
 import routerProfile from "./routes/profile/profile.router";
 import routerReview from "./routes/score/score.router";
 import routerSearch from "./routes/search/search.router";
-import {
-	AuthenticationUser,
-	AuthenticationProfile,
-} from "./middleware/authentication.middleware";
 import routerRecommendation from "./routes/recommendation/recommendation.router";
 import helmet from "helmet";
 import compression from "compression";
-import { ENV_SETUP } from "./config/variables-env";
+import { ENV_SETUP } from "./config/variables.config";
+import { isValidToken, tokenProfile } from "./middleware/token.middleware";
+import { errorHandling } from "./middleware/error.middleware";
+import { UniversalSentenceEncoderQnA } from "@tensorflow-models/universal-sentence-encoder/dist/use_qna";
+import routerLayout from './routes/layout/layout.router';
 
 const app = express();
+let modelIA: UniversalSentenceEncoderQnA | null = null;
 
 class Server {
 	constructor() {
-		if (!ENV_SETUP.NODE_ENV?.includes("testing")) this.listen();
+		if(ENV_SETUP.NODE_ENV?.includes("development") || ENV_SETUP.NODE_ENV?.includes("production"))
+			this.listen();
+		this.loadIA();
 		this.middleware();
 		this.routes();
 		this.database();
@@ -33,6 +38,8 @@ class Server {
 		app.use("/api/serie", routerSerie);
 		app.use("/api/score", routerReview);
 		app.use("/api/search", routerSearch);
+		app.use("/api/layout", routerLayout);
+		app.use(errorHandling);
 	}
 	listen() {
 		app.listen(ENV_SETUP.PORT, () => {
@@ -44,8 +51,8 @@ class Server {
 		app.use(express.json());
 		app.use(helmet());
 		app.use(compression());
-		app.use(AuthenticationUser);
-		app.use(AuthenticationProfile);
+		app.use(isValidToken);
+		app.use(tokenProfile);
 	}
 	async database() {
 		try {
@@ -55,6 +62,10 @@ class Server {
 			console.error("Can't connect to Database");
 		}
 	}
+	async loadIA(){
+		modelIA = await encoder.loadQnA();
+		console.log("Model IA loaded");
+	}
 }
 new Server();
-export default app;
+export default { app, modelIA }; 

@@ -10,4 +10,11 @@ export const ENV_SETUP = {
 	DB_PASSWORD : process.env.DB_PASSWORD,
 	DB_HOST : process.env.DB_HOST,
 	DB_PORT : process.env.DB_DOCKER_PORT ? process.env.DB_DOCKER_PORT : process.env.DB_LOCAL_PORT,
+	API_TMDB: process.env.API_TMDB,
+	TOKEN_TMDB: process.env.TOKEN_TMDB,
+	CLAVE_ENCRYPTATION: process.env.CLAVE_ENCRYPTATION,
+	SECRET_KEY_TOKEN : process.env.SECRET_KEY_TOKEN,
+	EMAIL: process.env.EMAIL,
+	PASSWORD_EMAIL: process.env.PASSWORD_EMAIL,
+	API_SERFLIX: process.env.API_SERFLIX
 }

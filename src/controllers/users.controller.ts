@@ -1,68 +1,137 @@
-import { Request, Response } from "express";
-import Users from "../models/users.model";
-import { Encrypt, Decrypt } from "../encryptation/Encryptation";
-import { ErrorControl } from "../error/error-handling";
-import {
-	createToken,
-	decodeJwt,
-} from "../middleware/authentication.middleware";
 import sequelize from "../db/connection";
+import { NextFunction, Request, Response } from "express";
+import { Encrypt, VerifyPassword } from "../encryptation/Encryptation";
 import { QueryTypes } from "sequelize";
-import { decrypt } from "dotenv";
+import { createTokenAuthentication, createTokenLogUser, createTokenPassword, decodeTokenLogUser, decodeTokenPassword } from "../config/token.config";
+import { spApi } from "../interface/sp.api";
+import { SpError, SyntaxError } from "../error/errors";
+import { sendEmailtoAuthenticate, sendEmailtoNotifyUpdatePassword, sendEmailToResetPassword, sendEmailtoWelcome } from "../email/email.controller";
 
-export const register = async (req: Request, resp: Response) => {
+export const register = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { username, password, email } = req.body;
-		if (!(username && password && email)) throw new Error("sintax_error");
+		if (!(username && password && email)) 
+			throw new SyntaxError("username, password and email are required");
 		const passwordEncrypted = Encrypt(password);
-		const user = await Users.create({
-			username,
-			password: passwordEncrypted,
-			email,
-		});
-		const token = createToken(user.dataValues.id);
+		const [query]: any[] = await sequelize.query(
+			`CALL add_user(:username, :email, :passwordEncrypted);`,
+			{
+				replacements: {
+					username,
+					passwordEncrypted,
+					email
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const token = createTokenLogUser(resultSp.result.id, email);
 		const resultEndPoint = {
 			msg: "User created",
 			token,
 		};
+		sendEmailtoWelcome(email);
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error)
 	}
 };
-
-export const login = async (req: Request, resp: Response) => {
+export const login = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { username, password } = req.body;
-		if (!(username && password)) throw new Error("sintax_error");
-		const user = await Users.findOne({
-			where: {
-				username,
-			},
-		});
-		if (!user) throw new Error("not_find_user");
-		if (password != Decrypt(user.dataValues.password))
-			throw new Error("not_match_password");
-		const token = createToken(user.dataValues.id);
+		if (!(username && password)) 
+			throw new SyntaxError("username and password are required");
+		const [query]: any[] = await sequelize.query(
+			`CALL get_user_by_username(:username)`,
+			{
+				replacements: {
+					username
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code){
+			if(resultSp.error_code == 45000){
+				VerifyPassword(password, resultSp.result.password);
+				const tokenToAuthenticate = createTokenAuthentication(resultSp.result.id, resultSp.result.username);
+				sendEmailtoAuthenticate(resultSp.result.email, username, tokenToAuthenticate)
+				throw new SpError(resultSp.message);
+			}
+			throw new SpError(resultSp.message);
+		}
+		VerifyPassword(password, resultSp.result.password);
+		const token = createTokenLogUser(resultSp.result.id, resultSp.result.email);
 		const resultEndPoint = {
 			msg: "User logged",
+			first_time: resultSp.result.is_first_time == 1 ? true : false,
 			token,
 		};
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const changePassword = async (req: Request, resp: Response) => {
+export const updateToPremium = async (req: Request, resp: Response, next: NextFunction) =>{
+	try{
+		const { idUser } = decodeTokenLogUser(req.headers.authorization!);
+		await sequelize.query(
+			`CALL change_to_premium(:idUser)`,
+			{
+				replacements: {
+					idUser
+				},
+				type: QueryTypes.RAW
+			}
+		);
+		const resultEndPoint = {
+			msg: "User is now premium",
+		};
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const updateToFree = async (req: Request, resp: Response, next: NextFunction) =>{
+	try{
+		const { idUser } = decodeTokenLogUser(req.headers.authorization!);
+		await sequelize.query(
+			`CALL change_to_free(:idUser)`,
+			{
+				replacements: {
+					idUser
+				},
+				type: QueryTypes.RAW
+			}
+		);
+		const resultEndPoint = {
+			msg: "User is now free",
+		};
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const updatePassword = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { oldPassword, newPassword } = req.body;
-		if (!(oldPassword && newPassword)) throw new Error("sintax_error");
-		const { idUser } = decodeJwt(req.headers.authorization!);
-		const passwordEncrypted = await Users.findByPk(idUser);
-		if (oldPassword != Decrypt(passwordEncrypted?.dataValues.password))
-			throw new Error("not_match_password");
+		if (!(oldPassword && newPassword)) 
+			throw new SyntaxError("oldPassword and newPassword are required");
+		const { idUser, email } = decodeTokenLogUser(req.headers['authorization']!);
+		const [queryAux]: any = await sequelize.query(
+			`
+			SELECT password FROM users WHERE id = :idUser;
+			`, 
+			{
+				replacements: {
+					idUser
+				}
+			}
+		);
+		const passwordEncrypted = queryAux['0'].password;
+		VerifyPassword(oldPassword, passwordEncrypted);
 		const newPasswordEncrypted = Encrypt(newPassword);
 		const [query]: any[] = await sequelize.query(
 			`
@@ -76,30 +145,145 @@ export const changePassword = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT
 			}
 		);
-		if(query['0'].status == 403)
-			throw new Error("not_update_password");
-		resp.status(200).json({ msg: "Password updated" });
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		sendEmailtoNotifyUpdatePassword(email);
+		const resultEndPoint = {
+			msg: "Password updated",
+		};
+		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
-export const changeUsername = async (req: Request, resp: Response) => {
+export const updateUsername = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { newUsername } = req.body;
-		if (!newUsername) throw new Error("sintax_error");
-		const { idUser } = decodeJwt(req.headers.authorization!);
-		await Users.update(
-			{ username: newUsername },
-			{
-				where: {
-				id: idUser,
-				}
+		if (!newUsername) 
+			throw new SyntaxError("newUsername is required");
+		const { idUser } = decodeTokenLogUser(req.headers.authorization!);
+		const [query]: any[] = await sequelize.query(
+			`
+			CALL update_username(:idUser, :newUsername);
+			`, {
+				replacements: {
+					idUser,
+					newUsername
+				}, 
+				type: QueryTypes.SELECT
 			}
 		);
-		resp.status(200).json({ msg: "Username updated" });	
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "Username updated"
+		}
+		resp.status(200).json(resultEndPoint);	
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
+	}
+};
+export const updateFirstTime = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { idUser } = decodeTokenLogUser(req.headers.authorization!);
+		const [query]: any = await sequelize.query(
+			`CALL update_first_time(:idUser)`,
+			{
+				replacements: {
+					idUser
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "First time updated"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const requestResetPassword = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { email } = req.body;
+		if (!email) 
+			throw new SyntaxError("email is required");
+		const [query]: any = await sequelize.query(
+			`
+			CALL get_user_by_email(:email);
+			`, {
+				replacements: {
+					email
+				}, 
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code && resultSp.error_code != 45000)
+			throw new SpError(resultSp.message);
+		const token = createTokenPassword(resultSp.result.id, email);
+		sendEmailToResetPassword(email, resultSp.result.username, token);
+		const resultEndPoint = {
+			msg: "Email sent"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const authenticate = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { idUser } = decodeTokenLogUser(req.headers.authorization!);
+		const [query]: any[] = await sequelize.query(
+			`
+			CALL authenticate_user(:idUser);
+			`, {
+				replacements: {
+					idUser
+				}, 
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const resultEndPoint = {
+			msg: "User authenticated"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
+	}
+};
+export const resetPassword = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { newPassword } = req.body;
+		if (!newPassword)	
+			throw new SyntaxError("newPassword is required");
+		const { idUser } = decodeTokenPassword(req.headers.authorization!);
+		const [query]: any[] = await sequelize.query(
+			`
+			CALL update_password(:idUser, :newPasswordEncrypted);
+			`, 
+			{
+				replacements: {
+					idUser, 
+					newPasswordEncrypted: Encrypt(newPassword)
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		query
+		const resultEndPoint = {
+			msg: "Password updated"
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error: any){
+		next(error);
 	}
 };

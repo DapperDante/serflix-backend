@@ -1,17 +1,17 @@
-import { Request, Response } from "express";
-import ProfileSeries from "../models/profile_series.model";
-import { ErrorControl } from "../error/error-handling";
+import { NextFunction, Request, Response } from "express";
 import { getSerieById, getSerieWithExtras } from "../tmdb_api/series.tmdb";
-import sequelize from "../db/connection";
-import { decodeJwt } from "../middleware/authentication.middleware";
 import { QueryTypes } from "sequelize";
+import { decodeTokenLogProfile } from "../config/token.config";
+import { SpError, SyntaxError } from "../error/errors";
+import { spApi } from "../interface/sp.api";
+import sequelize from "../db/connection";
 
-export const addFavoriteSerie = async (req: Request, resp: Response) => {
+export const addFavoriteSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idSerie } = req.body;
 		if (!idSerie) 
-			throw new Error("sintax_error");
-		const { idProfile } = decodeJwt(req.headers["authorization"]!);
+			throw new SyntaxError("sintax_error");
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL add_serie(:idProfile, :idSerie);
@@ -23,43 +23,52 @@ export const addFavoriteSerie = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT
 			}
 		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		const resultEndPoint = {
 			msg: "Serie added",
-			goal: query['0'].goal || null
+			goal: resultSp.result.goal
 		}
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
 
-export const getSeriesByProfile = async (req: Request, resp: Response) => {
+export const getSeriesByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
-		const query = await ProfileSeries.findAll({
-			attributes: ["serie_id"],
-			where: {
-				profile_id
-			},
-		});
-		query.map(async (serie) => await getSerieById(serie.dataValues.serie_id));
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any[] = await sequelize.query(
+			`
+			CALL get_all_series(:idProfile);
+			`, 
+			{
+				replacements: {
+					idProfile
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
+		const series = resultSp.result.map(async (serie: {serie_id: number}) => await getSerieById(serie.serie_id));
 		const entertaiment = await Promise.all(query);
 		const resultEndPoint = {
 			results: entertaiment
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error)
 	}
 };
 
-export const getSerieByProfile = async (req: Request, resp: Response) => {
+export const getSerieByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idSerie } = req.params;
-		const { idProfile } = decodeJwt(req.headers["authorization"]!);
-		const [data]: any[] = await sequelize.query(
+		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const [query]: any[] = await sequelize.query(
 			`
 				CALL get_serie(:idProfile, :idSerie);
 			`,{
@@ -70,32 +79,33 @@ export const getSerieByProfile = async (req: Request, resp: Response) => {
 				type: QueryTypes.SELECT
 			}
 		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code && resultSp.error_code != 1329)
+			throw new SpError(resultSp.message);
 		let resultEndPoint = {
 			result : await getSerieWithExtras(idSerie),
-			is_favorite: Object.values(data).length ? true : false
+			is_favorite: resultSp.result ? true : false
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
 
-export const deleteFavoriteSerie = async (req: Request, resp: Response) => {
+export const deleteFavoriteSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idSerie: serie_id } = req.params;
-		const { idProfile: profile_id } = decodeJwt(req.headers["authorization"]!);
-		await ProfileSeries.destroy({
-			where: {
-				profile_id,
-				serie_id
-			}
-		});
+		const { idProfile: profile_id } = decodeTokenLogProfile(req.headers["authorization"]!);
+		// await ProfileSeries.destroy({
+		// 	where: {
+		// 		profile_id,
+		// 		serie_id
+		// 	}
+		// });
 		resp.status(200).json({
 			msg: "delete successful"
 		})
 	} catch (error: any) {
-		const { code, msg } = ErrorControl(error);
-		resp.status(code).json({ msg });
+		next(error);
 	}
 };
