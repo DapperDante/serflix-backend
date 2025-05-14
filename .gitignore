@@ -7,3 +7,6 @@ node_modules
 /__test__/*
 jest.config.js
 jest.setup.js
+
+# Production
+certs/*

@@ -107,6 +107,10 @@ This part is essential to connect your database, if you work on docker you don't
 
 if you want put other name of user than root, but most common is `root`
 
+##### DB_NAME_FILE_SSL_CA
+
+File's name where it has a certificate of database
+
 ##### DB_PASSWORD
 
 It's essential put your password of your database, if you work on docker this password is now your password of your new database
