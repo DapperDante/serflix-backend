@@ -1,6 +1,7 @@
 /dist/*
 .env
 node_modules
+.vscode
 
 # Testing
 /__test__/*
