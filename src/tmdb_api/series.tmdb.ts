@@ -1,9 +1,10 @@
 import axios from "axios";
+import { ENV_SETUP } from "../config/variables.config";
 
 const instance = axios.create({
-	baseURL: `${process.env.API_TMDB}`,
+	baseURL: `${ENV_SETUP.API_TMDB}`,
 	headers: {
-		Authorization: `Bearer ${process.env.TOKEN_TMDB}`,
+		Authorization: `Bearer ${ENV_SETUP.TOKEN_TMDB}`,
 	},
 });
 instance.interceptors.response.use(

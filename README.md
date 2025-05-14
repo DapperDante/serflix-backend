@@ -52,6 +52,23 @@ because that command active `tsc --watch` (translate from ts to js) and `npx nod
 
 Now this project be able to up on docker with the command `docker compose up` but if you have problem and change other line of code and you update change, you only put `docker compose up --build` because rebuild and compile changes
 
+## Security levels in tokens
+
+Any request such as when add new user or profile until access to them, need a token but the better way to avoid problems which token to use, it needs a field where has a number to specify its role.
+
+| Number | Role              |
+| ------ | ----------------- |
+| 1      | Access account    |
+| 2      | Access profile    |
+| 3      | Authenticate user |
+| 4      | Forgot password   |
+
+## Email system
+
+Now, it be able to send emails through nodemailer and Gmail.
+
+When you add a new user, automatic send an email to give welcome to user but if you want other templates for each method that required, you add new folder on templates and them add a index.html and optional if you want a style.css but have to be careful with its names index and style
+
 ## Handling error
 
 To avoid repeat many lines of code and get different results, so there is a file to avoid that and you can found and fix that problem and get better that control
@@ -114,6 +131,18 @@ It's to encrypte the passwords with system AES
 
 It's to transform data of user with JWS
 
+##### EMAIL
+
+it's to authenticate of service to send emails through nodemailer
+
+##### PASSWORD_EMAIL
+
+it's to password of service that use nodemailer to authenticate
+
+##### API_SERFLIX
+
+it's only reference but it's important to email's controllers
+
 ### Common problems
- 
+
 If you have problem like `Not found backend` (don't care), To resolve this problem you navigate to node_modules where it's @tensorflow\tfjs-node\lib\napi-v9 and move tensorflow.dll from this directory to ../napi-v8, finally reset your backend.
