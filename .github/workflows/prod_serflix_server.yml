@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - server-serflix
+name: Build and deploy Node.js app to Azure Web App - serflix-server
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
           npm run build --if-present
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: zip -r release.zip node_modules dist/* 
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -43,7 +43,10 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
@@ -53,11 +56,18 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
       
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ACB505268BB746FE898A5CEBBBBD4477 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9425EB1E7F154142895E6E378F0B8B66 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15F1C8820E834F1C956186E94E17A164 }}
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'server-serflix'
+          app-name: 'serflix-server'
           slot-name: 'Production'
-          package: './dist'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8128A96E846743FEA0D4EDDA6E5F1286 }}
+          package: .
+          
