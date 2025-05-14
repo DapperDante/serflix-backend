@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { getMovieById, getMovieWithExtras } from "../tmdb_api/movies.tmdb";
 import { QueryTypes } from "sequelize";
-import { decodeTokenLogProfile } from "../config/token.config";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 import { SpError, SyntaxError } from "../error/errors";
 import sequelize from "../db/connection";
 
@@ -11,7 +10,7 @@ export const addFavoriteMovie = async (req: Request, resp: Response, next: NextF
 		const { idMovie } = req.body;
 		if (!idMovie) 
 			throw new SyntaxError("idMovie is required");
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL add_movie(:idProfile, :idMovie);
@@ -39,7 +38,7 @@ export const addFavoriteMovie = async (req: Request, resp: Response, next: NextF
 
 export const getMoviesByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL get_all_movies(:idProfile);
@@ -54,8 +53,11 @@ export const getMoviesByProfile = async (req: Request, resp: Response, next: Nex
 		const resultSp: spApi = query['0'].response;
 		if(resultSp.error_code)
 			throw new SpError(resultSp.message);
-		const moviesId = resultSp.result.map(async (movie: {movie_id: number}) => await getMovieById(movie.movie_id));
-		const entertaiment = await Promise.all(moviesId);
+		let entertaiment = null;
+		if(resultSp.result){
+			const moviesId = resultSp.result.map(async (movie: {movie_id: number}) => await getMovieById(movie.movie_id));
+			entertaiment = await Promise.all(moviesId);
+		}
 		const resultEndPoint = {
 			results: entertaiment,
 		}
@@ -64,18 +66,17 @@ export const getMoviesByProfile = async (req: Request, resp: Response, next: Nex
 		next(error);
 	}
 };
-
 export const getMovieByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idMovie } = req.params;
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { id } = req.params;
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
-			CALL get_movie(:idProfile, :idMovie);
+			CALL get_movie(:idProfile, :id);
 			`, {
 				replacements: {
 					idProfile,
-					idMovie
+					id
 				},
 				type: QueryTypes.SELECT,
 			}
@@ -84,7 +85,7 @@ export const getMovieByProfile = async (req: Request, resp: Response, next: Next
 		if(resultSp.error_code && resultSp.error_code != 1329)
 			throw new SpError(resultSp.message);
 		let resultEndPoint = {
-			result: await getMovieWithExtras(idMovie),
+			result: await getMovieWithExtras(id),
 			is_favorite: resultSp.result ? true : false
 		};
 		resp.status(200).json(resultEndPoint);
@@ -94,14 +95,21 @@ export const getMovieByProfile = async (req: Request, resp: Response, next: Next
 };
 export const deleteFavoriteMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idMovie:movie_id } = req.params;
-		const { idProfile:profile_id } = decodeTokenLogProfile(req.headers["authorization"]!);
-		// await ProfileMovies.destroy({
-		// 	where: {
-		// 		profile_id,
-		// 		movie_id,
-		// 	}
-		// });
+		const { id } = req.params;
+		const { idProfile } = req.user;
+		const [query]: any[] = await sequelize.query(`
+				CALL delete_movie(:idProfile, :id);
+			`, {
+				replacements: {
+					idProfile,
+					id
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		resp.status(200).json({
 			msg: "delete successful",
 		});

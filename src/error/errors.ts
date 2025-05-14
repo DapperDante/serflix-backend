@@ -18,3 +18,8 @@ export class QueryError extends Error{
 		super(message);
 	}
 }
+export class PermissionDeniedError extends Error{
+	constructor(message: string){
+		super(message);
+	}
+}

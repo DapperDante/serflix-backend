@@ -1,7 +1,6 @@
 import sequelize from "../db/connection";
 import { NextFunction, Request, Response } from "express";
 import { QueryTypes } from "sequelize";
-import { decodeTokenLogProfile } from "../config/token.config";
 import {
 	getMovieById,
 	getMoviesNowPlaying,
@@ -17,7 +16,7 @@ import {
 	getSeriesPopular,
 	getSerieWithExtras,
 } from "../tmdb_api/series.tmdb";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 import { SpError } from "../error/errors";
 
 export const getRecommendations = async (
@@ -54,9 +53,7 @@ export const getRecommendationsByProfile = async (
 	next: NextFunction
 ) => {
 	try {
-		const { idProfile: profile_id } = decodeTokenLogProfile(
-			req.headers["authorization"]!
-		);
+		const { idProfile: profile_id } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 				CALL get_rec_by_profile(:profile_id);

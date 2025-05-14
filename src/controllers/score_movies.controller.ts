@@ -1,9 +1,8 @@
 import sequelize from "../db/connection";
 import { NextFunction, Request, Response } from "express";
 import { QueryTypes } from "sequelize";
-import { decodeTokenLogProfile } from "../config/token.config";
 import { SyntaxError } from "../error/errors";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 export const addReviewMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const {
@@ -13,7 +12,7 @@ export const addReviewMovie = async (req: Request, resp: Response, next: NextFun
 		} = req.body;
 		if(!(idMovie && review))
 			throw new SyntaxError("idMovie, score and review are required");
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL add_score_movie(:idProfile, :idMovie, :score, :review);
@@ -41,7 +40,7 @@ export const addReviewMovie = async (req: Request, resp: Response, next: NextFun
 export const getReviewsMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idMovie } = req.params;
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		if (!idMovie) 
 			throw new SyntaxError("idMovie is required");
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

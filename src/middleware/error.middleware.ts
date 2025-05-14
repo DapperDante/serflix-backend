@@ -1,12 +1,16 @@
 import { NextFunction, Request, Response } from "express";
-import { PasswordError, QueryError, SpError, SyntaxError } from "../error/errors";
+import { PasswordError, PermissionDeniedError, QueryError, SpError, SyntaxError } from "../error/errors";
 import { JsonWebTokenError } from "jsonwebtoken";
 
 export const errorHandling = (err: any, req: Request<any>, res: Response<any>, next: NextFunction) =>{
 	let status;
 	let msg;
 	console.error(err);
-	if(err instanceof SyntaxError){
+	if(err instanceof PermissionDeniedError){
+		status = 403;
+		msg = err.message;
+	}
+	else if(err instanceof SyntaxError){
 		status = 400;
 		msg = err.message;
 	}
@@ -19,7 +23,7 @@ export const errorHandling = (err: any, req: Request<any>, res: Response<any>, n
 		msg = err.message;
 	}
 	else if(err instanceof JsonWebTokenError){
-		status = 401;
+		status = 403;
 		msg = err.message;
 	}
 	else if(err instanceof QueryError){
@@ -30,8 +34,5 @@ export const errorHandling = (err: any, req: Request<any>, res: Response<any>, n
 		status = 500;
 		msg = "Internal Server";
 	}
-	const resultError = {
-		msg
-	}
-	res.status(status!).json(resultError);
+	res.status(status).json({msg});
 }

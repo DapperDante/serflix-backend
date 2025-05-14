@@ -2,18 +2,18 @@ import { NextFunction, Request, Response } from "express";
 import { getMovieById } from "../tmdb_api/movies.tmdb";
 import { getSerieById } from "../tmdb_api/series.tmdb";
 import { QueryTypes } from "sequelize";
-import { createTokenLogProfile, decodeTokenLogProfile, decodeTokenLogUser } from "../config/token.config";
+import { createTokenProfile, createTokenUser } from "../security/token";
 import { QueryError, SpError, SyntaxError } from "../error/errors";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 import sequelize from "../db/connection";
-import { Encrypt, VerifyPassword } from "../encryptation/Encryptation";
+import { Encrypt, VerifyPassword } from "../security/Encryptation";
 
 export const addProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { name, img } = req.body;
 		if (!(name && img)) 
 			throw new SyntaxError("name and img is required");
-		const { idUser, email} = decodeTokenLogUser(req.headers["authorization"]!);
+		const { idUser, email} = req.user;
 		const [query]: any = await sequelize.query(
 			`CALL add_profile(:idUser, :name, :img);`,
 			{
@@ -28,28 +28,26 @@ export const addProfile = async (req: Request, resp: Response, next: NextFunctio
 		const resultSp: spApi = query['0'].response;
 		if(resultSp.error_code)
 			throw new SpError(resultSp.message);
-		const token = createTokenLogProfile(idUser, email, resultSp.result.id);
 		const resultEndPoint = {
-			msg: "profile created",
-			token
+			msg: "profile created"
 		}
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
 		next(error);
 	}
 };
-export const logInProfile = async (req: Request, resp: Response, next: NextFunction) => {
+export const loginProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try{
 		const { idProfile, password } = req.body;
 		if(!idProfile) 
 			throw new SyntaxError("idProfile is required");
-		const { idUser, email } = decodeTokenLogUser(req.headers["authorization"]!);
+		const { idUser, email } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			SELECT password FROM profiles 
 			LEFT JOIN profile_password AS p_password ON p_password.profile_id = profiles.id
 			WHERE profiles.id = :idProfile AND user_id = :idUser;
-			`, 
+			`,
 			{
 				replacements: {
 					idProfile,
@@ -58,12 +56,11 @@ export const logInProfile = async (req: Request, resp: Response, next: NextFunct
 				type: QueryTypes.SELECT
 			}
 		);
-		console.log(query);
 		if(!query)
 			throw new QueryError("Profile not found");
 		if(query?.password)
 			VerifyPassword(password, query?.password);
-		const token = createTokenLogProfile(idUser, email, idProfile);
+		const token = createTokenProfile(idUser, email, idProfile);
 		const resultEndPoint = {
 			msg: "Profile access",
 			token
@@ -73,9 +70,22 @@ export const logInProfile = async (req: Request, resp: Response, next: NextFunct
 		next(error);
 	}
 }
+export const logoutProfile = async (req: Request, resp: Response, next: NextFunction) => {
+	try{
+		const { idUser, email } = req.user;
+		const token = createTokenUser(idUser, email);
+		const resultEndPoint = {
+			msg: "Logout profile",
+			token
+		}
+		resp.status(200).json(resultEndPoint);
+	}catch(error:any){
+		next(error);
+	}
+};
 export const getProfiles = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idUser } = decodeTokenLogUser(req.headers["authorization"]!);
+		const { idUser } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL get_all_profiles(:idUser);
@@ -100,7 +110,7 @@ export const getProfiles = async (req: Request, resp: Response, next: NextFuncti
 };
 export const getProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL get_profile(:idProfile);
@@ -134,12 +144,12 @@ export const updateProfile = async (req: Request, resp: Response, next: NextFunc
 		const { name, img } = req.body;
 		if (!(name || img)) 
 			throw new SyntaxError("name or img is required");
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		let msg: string;
 		if (name) {
 			await sequelize.query(
 				`
-				UPDATE profiles SET name = :name WHERE profile_id = :idProfile;
+				UPDATE profiles SET name = :name WHERE id = :idProfile;
 				`,
 				{
 					replacements: {
@@ -153,7 +163,7 @@ export const updateProfile = async (req: Request, resp: Response, next: NextFunc
 		}else{
 			await sequelize.query(
 				`
-				UPDATE profiles SET img = :img WHERE profile_id = :idProfile;
+				UPDATE profiles SET img = :img WHERE id = :idProfile;
 				`,
 				{
 					replacements: {
@@ -179,7 +189,7 @@ export const addPasswordProfile = async (req: Request, resp: Response, next: Nex
 		if(!password)
 			throw new SyntaxError("password is required");
 		const passwordEncrypted = Encrypt(password);
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL add_profile_password(:idProfile, :passwordEncrypted);
@@ -209,7 +219,7 @@ export const udpatePasswordProfile = async (req: Request, resp: Response, next: 
 		if(!password)
 			throw new SyntaxError("password is required");
 		const passwordEncrypted = Encrypt(password);
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL update_profile_password(:idProfile, :passwordEncrypted);
@@ -230,12 +240,12 @@ export const udpatePasswordProfile = async (req: Request, resp: Response, next: 
 		}
 		resp.status(200).json(resultEndPoint);
 	}catch(error){
-
+		next(error);
 	}
 };
 export const deletePasswordProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try{
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL delete_profile_password(:idProfile);

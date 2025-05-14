@@ -1,9 +1,8 @@
 import sequelize from "../db/connection";
 import { NextFunction, Request, Response } from "express";
 import { QueryTypes } from "sequelize";
-import { decodeTokenLogProfile } from "../config/token.config";
 import { SpError, SyntaxError } from "../error/errors";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 export const addReviewSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const {
@@ -13,7 +12,7 @@ export const addReviewSerie = async (req: Request, resp: Response, next: NextFun
 		} = req.body;
 		if (!(serie_id && score && review))
 			throw new SyntaxError("idSerie, score and review are required");
-		const {idProfile:profile_id} = decodeTokenLogProfile(req.headers["authorization"]!);
+		const {idProfile:profile_id} = req.user;
 		const [query]: any = await sequelize.query(
 			`
 			CALL add_score_serie(:profile_id, :serie_id, :score, :review);
@@ -40,7 +39,7 @@ export const addReviewSerie = async (req: Request, resp: Response, next: NextFun
 export const getReviewsSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const { idSerie } = req.params;
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
 				CALL get_score_serie(:idProfile, :idSerie);

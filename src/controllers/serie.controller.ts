@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { getSerieById, getSerieWithExtras } from "../tmdb_api/series.tmdb";
 import { QueryTypes } from "sequelize";
-import { decodeTokenLogProfile } from "../config/token.config";
 import { SpError, SyntaxError } from "../error/errors";
-import { spApi } from "../interface/sp.api";
+import { spApi } from "../interface/sp.interface";
 import sequelize from "../db/connection";
 
 export const addFavoriteSerie = async (req: Request, resp: Response, next: NextFunction) => {
@@ -11,7 +10,7 @@ export const addFavoriteSerie = async (req: Request, resp: Response, next: NextF
 		const { idSerie } = req.body;
 		if (!idSerie) 
 			throw new SyntaxError("sintax_error");
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL add_serie(:idProfile, :idSerie);
@@ -38,7 +37,7 @@ export const addFavoriteSerie = async (req: Request, resp: Response, next: NextF
 
 export const getSeriesByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
 			CALL get_all_series(:idProfile);
@@ -53,8 +52,11 @@ export const getSeriesByProfile = async (req: Request, resp: Response, next: Nex
 		const resultSp: spApi = query['0'].response;
 		if(resultSp.error_code)
 			throw new SpError(resultSp.message);
-		const series = resultSp.result.map(async (serie: {serie_id: number}) => await getSerieById(serie.serie_id));
-		const entertaiment = await Promise.all(query);
+		let entertaiment = null;
+		if(resultSp.result){
+			const series = resultSp.result.map(async (serie: {serie_id: number}) => await getSerieById(serie.serie_id));
+			entertaiment = await Promise.all(query);
+		}
 		const resultEndPoint = {
 			results: entertaiment
 		}
@@ -66,15 +68,15 @@ export const getSeriesByProfile = async (req: Request, resp: Response, next: Nex
 
 export const getSerieByProfile = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idSerie } = req.params;
-		const { idProfile } = decodeTokenLogProfile(req.headers["authorization"]!);
+		const { id } = req.params;
+		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
-				CALL get_serie(:idProfile, :idSerie);
+				CALL get_serie(:idProfile, :id);
 			`,{
 				replacements: {
 					idProfile,
-					idSerie
+					id
 				},
 				type: QueryTypes.SELECT
 			}
@@ -83,7 +85,7 @@ export const getSerieByProfile = async (req: Request, resp: Response, next: Next
 		if(resultSp.error_code && resultSp.error_code != 1329)
 			throw new SpError(resultSp.message);
 		let resultEndPoint = {
-			result : await getSerieWithExtras(idSerie),
+			result : await getSerieWithExtras(id),
 			is_favorite: resultSp.result ? true : false
 		}
 		resp.status(200).json(resultEndPoint);
@@ -94,14 +96,22 @@ export const getSerieByProfile = async (req: Request, resp: Response, next: Next
 
 export const deleteFavoriteSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idSerie: serie_id } = req.params;
-		const { idProfile: profile_id } = decodeTokenLogProfile(req.headers["authorization"]!);
-		// await ProfileSeries.destroy({
-		// 	where: {
-		// 		profile_id,
-		// 		serie_id
-		// 	}
-		// });
+		const { id } = req.params;
+		const { idProfile } = req.user;
+		const [query]: any[] = await sequelize.query(
+			`
+				CALL delete_serie(:idProfile, :idSerie);
+			`, {
+				replacements: {
+					idProfile,
+					id
+				},
+				type: QueryTypes.SELECT
+			}
+		);
+		const resultSp: spApi = query['0'].response;
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		resp.status(200).json({
 			msg: "delete successful"
 		})
