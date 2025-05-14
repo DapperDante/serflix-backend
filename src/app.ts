@@ -56,7 +56,7 @@ class Server {
 			await db.authenticate();
 			console.log("Connect to Database");
 		} catch (err) {
-			console.error("Can't connect to Database");
+			console.error("Can't connect to Database =>"+err);
 		}
 	}
 	async loadIA(){
