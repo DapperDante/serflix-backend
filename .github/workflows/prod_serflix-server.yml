@@ -30,6 +30,7 @@ jobs:
       - name: Build TypeScript
         run: |
           npm run build
+          
       - name: Copy package.json and package-lock.json to dist
         run: |
           cp package.json dist/
