@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
 		dialect: "mysql",
 		dialectOptions: {
 			ssl: {
-				ca: fs.readFileSync(ENV_SETUP.DB_SSL_CA),
+				ca: fs.readFileSync(ENV_SETUP.DB_NAME_FILE_SSL_CA),
 			}
 		},
 		port: Number(ENV_SETUP.DB_PORT),
