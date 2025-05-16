@@ -9,4 +9,4 @@ jest.config.js
 jest.setup.js
 
 # Production
-certs/*
+.pem

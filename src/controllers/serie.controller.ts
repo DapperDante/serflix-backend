@@ -100,7 +100,7 @@ export const deleteFavoriteSerie = async (req: Request, resp: Response, next: Ne
 		const { idProfile } = req.user;
 		const [query]: any[] = await sequelize.query(
 			`
-				CALL delete_serie(:idProfile, :idSerie);
+				CALL delete_serie(:idProfile, :id);
 			`, {
 				replacements: {
 					idProfile,

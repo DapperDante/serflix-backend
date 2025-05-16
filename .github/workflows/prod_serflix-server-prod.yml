@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - serflix-server
+name: Build and deploy Node.js app to Azure Web App - serflix-server-prod
 
 on:
   push:
@@ -22,14 +22,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '20.x'
-
-      - name: npm install and build
+      - name: Install dependencies
         run: |
           npm install
-          npm run build --if-present
+
+      - name: Build TypeScript
+        run: |
+          npm run build
+
+      - name: Copy package.json and package-lock.json to dist
+        run: |
+          cp package.json dist/
+          cp package-lock.json dist/
+          cp -r src/email/template dist/email/
 
       - name: Zip artifact for deployment
-        run: zip release.zip node_modules dist/* -r
+        run: cd dist && zip -r ../release.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -59,15 +67,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ACB505268BB746FE898A5CEBBBBD4477 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9425EB1E7F154142895E6E378F0B8B66 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15F1C8820E834F1C956186E94E17A164 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5B9239DCAD2746448BFBAAB198B3388D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_762309677FEC4C3BBE54980ABCCBBA66 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_5CC2E86E24DF4B2F8FBD3BC8BAC18465 }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'serflix-server'
-          slot-name: 'Production'
-          package: .
+          app-name: 'serflix-server-prod'
+          package: '.'
           

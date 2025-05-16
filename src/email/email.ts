@@ -6,7 +6,7 @@ import fs from 'fs';
 const DIR_TEMPLATES = './template';
 
 export const sendEmailtoAuthenticate = async (email: string, username: string, token: string) =>{
-	const htmlWithCssTemplate = await getTemplate('auth-user');
+	const htmlWithCssTemplate = await getTemplate('authenticate');
 	const dataToTemplate = [
 		{var: '{TOKEN}', value: token},
 		{var: '{API}', value: `${ENV_SETUP.API_SERFLIX}/auth`},

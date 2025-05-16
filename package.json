@@ -1,7 +1,7 @@
 {
   "name": "serve-serflix",
   "version": "1.2.2",
-  "main": "dist/app.js",
+  "main": "app.js",
   "scripts": {
     "build": "tsc",
     "start": "tsc && node dist/app.js",
