@@ -16,13 +16,14 @@ import routerSerie from './routes/serie.routes';
 import routerReview from './routes/score.routes';
 import routerSearch from './routes/search.routes';
 import routerLayout from './routes/layout.routes';
+import { PermissionDeniedError } from './error/errors';
 
 const app = express();
 let modelIA: UniversalSentenceEncoderQnA | null = null;
 
 class Server {
 	constructor() {
-		if(ENV_SETUP.NODE_ENV?.includes("development") || ENV_SETUP.NODE_ENV?.includes("production"))
+		if(ENV_SETUP.NODE_ENV.includes("development") || ENV_SETUP.NODE_ENV.includes("production"))
 			this.listen();
 		this.loadIA();
 		this.middleware();
@@ -46,7 +47,16 @@ class Server {
 		});
 	}
 	middleware() {
-		app.use(cors());
+		app.use(cors({
+			origin: function(origin, callback){
+				if (origin && origin.includes(ENV_SETUP.API_SERFLIX)) {
+					callback(null, true);
+				} else {
+					callback(new PermissionDeniedError('Blocked by CORS'));
+				}
+			},
+			optionsSuccessStatus: 200
+		}));
 		app.use(express.json());
 		app.use(helmet());
 		app.use(compression());

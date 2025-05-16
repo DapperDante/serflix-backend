@@ -3,7 +3,7 @@ import { configDotenv } from "dotenv";
 configDotenv();
 
 export const ENV_SETUP = {
-	NODE_ENV: process.env.NODE_ENV,
+	NODE_ENV: process.env.NODE_ENV!,
 	PORT : Number(process.env.DOCKER_PORT ? process.env.DOCKER_PORT : process.env.PORT) || 3000,
 	DB_NAME : process.env.DB_NAME,
 	DB_USER : process.env.DB_USER,
@@ -17,5 +17,5 @@ export const ENV_SETUP = {
 	SECRET_KEY_TOKEN : process.env.SECRET_KEY_TOKEN,
 	EMAIL: process.env.EMAIL,
 	PASSWORD_EMAIL: process.env.PASSWORD_EMAIL,
-	API_SERFLIX: process.env.API_SERFLIX
+	API_SERFLIX: process.env.API_SERFLIX!
 }
