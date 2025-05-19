@@ -24,10 +24,11 @@ export const createTokenProfile = (idUser: number, email: string, idProfile: num
 		expiresIn: tokenAccessLifeTime
 	});
 }
-export const createTokenAuth = (idUser: number, username: string): string =>{
+export const createTokenAuth = (idUser: number, email:string, username: string): string =>{
 	const payload: tokenAuthentication = {
 			idUser,
 			username,
+			email,
 			role: role.auth
 	}
 	return jwt.sign(payload, ENV_SETUP.SECRET_KEY_TOKEN!, {

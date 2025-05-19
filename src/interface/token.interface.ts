@@ -10,6 +10,7 @@ export interface tokenProfile extends tokenAccess{
 }
 export interface tokenAuthentication extends tokenBase{
 	idUser: number,
+	email: string,
 	username: string
 }
 export interface tokenPassword extends tokenBase{

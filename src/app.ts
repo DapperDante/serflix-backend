@@ -20,7 +20,6 @@ import { PermissionDeniedError } from './error/errors';
 
 const app = express();
 let modelIA: UniversalSentenceEncoderQnA | null = null;
-
 class Server {
 	constructor() {
 		if(ENV_SETUP.NODE_ENV.includes("development") || ENV_SETUP.NODE_ENV.includes("production"))
@@ -47,9 +46,10 @@ class Server {
 		});
 	}
 	middleware() {
+		const allowOrigins = ENV_SETUP.CORS_ORIGINS?.split(",") || [];
 		app.use(cors({
 			origin: function(origin, callback){
-				if (origin && origin.includes(ENV_SETUP.API_SERFLIX)) {
+				if (!ENV_SETUP.NODE_ENV.includes("production") || origin && allowOrigins.indexOf(origin) !== -1) {
 					callback(null, true);
 				} else {
 					callback(new PermissionDeniedError('Blocked by CORS'));

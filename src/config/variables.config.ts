@@ -17,5 +17,6 @@ export const ENV_SETUP = {
 	SECRET_KEY_TOKEN : process.env.SECRET_KEY_TOKEN,
 	EMAIL: process.env.EMAIL,
 	PASSWORD_EMAIL: process.env.PASSWORD_EMAIL,
-	API_SERFLIX: process.env.API_SERFLIX!
+	API_SERFLIX: process.env.API_SERFLIX!,
+	CORS_ORIGINS: process.env.CORS_ORIGINS
 }

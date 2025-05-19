@@ -30,7 +30,7 @@ export const signup = async (req: Request, resp: Response, next: NextFunction) =
 		const resultEndPoint = {
 			msg: "User created"
 		};
-		const token = createTokenAuth(resultSp.result.id, username);
+		const token = createTokenAuth(resultSp.result.id, email, username);
 		sendEmailtoAuthenticate(email, username, token);
 		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
@@ -55,7 +55,7 @@ export const login = async (req: Request, resp: Response, next: NextFunction) =>
 		if(resultSp.error_code){
 			if(resultSp.error_code == 45000){
 				VerifyPassword(password, resultSp.result.password);
-				const tokenToAuthenticate = createTokenAuth(resultSp.result.id, resultSp.result.username);
+				const tokenToAuthenticate = createTokenAuth(resultSp.result.id, resultSp.result.email, resultSp.result.username);
 				sendEmailtoAuthenticate(resultSp.result.email, username, tokenToAuthenticate)
 				throw new SpError(resultSp.message);
 			}
@@ -283,6 +283,7 @@ export const authenticate = async (req: Request, resp: Response, next: NextFunct
 		const resultEndPoint = {
 			msg: "User authenticated"
 		}
+		console.log(req.user);
 		sendEmailtoWelcome(req.user.email);
 		resp.status(200).json(resultEndPoint);
 	}catch(error: any){
