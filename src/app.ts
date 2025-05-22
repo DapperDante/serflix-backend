@@ -17,6 +17,7 @@ import routerReview from './routes/score.routes';
 import routerSearch from './routes/search.routes';
 import routerLayout from './routes/layout.routes';
 import { PermissionDeniedError } from './error/errors';
+import routerHealth from './routes/health.routes';
 
 const app = express();
 let modelIA: UniversalSentenceEncoderQnA | null = null;
@@ -38,6 +39,7 @@ class Server {
 		app.use("/api/score", routerReview);
 		app.use("/api/search", routerSearch);
 		app.use("/api/layout", routerLayout);
+		app.use("/api/health", routerHealth);
 		app.use(errorHandling);
 	}
 	listen() {
