@@ -17,7 +17,7 @@ import routerReview from './routes/score.routes';
 import routerSearch from './routes/search.routes';
 import routerLayout from './routes/layout.routes';
 import { PermissionDeniedError } from './error/errors';
-import routerHealth from './routes/health.routes';
+import { healthCheck } from './controllers/health.controller';
 
 const app = express();
 let modelIA: UniversalSentenceEncoderQnA | null = null;
@@ -30,6 +30,9 @@ class Server {
 		this.routes();
 		this.database();
 	}
+	public(){
+		app.get("/api/health", healthCheck);
+	}
 	routes() {
 		app.use("/api/user", routerUser);
 		app.use("/api/profile", routerProfile);
@@ -39,7 +42,6 @@ class Server {
 		app.use("/api/score", routerReview);
 		app.use("/api/search", routerSearch);
 		app.use("/api/layout", routerLayout);
-		app.use("/api/health", routerHealth);
 		app.use(errorHandling);
 	}
 	listen() {
