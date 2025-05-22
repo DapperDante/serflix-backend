@@ -4,13 +4,13 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/app.js",
+    "start": "node dist/app.js",
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts"
   },
   "keywords": [],
   "author": "DapperDante",
   "license": "ISC",
-  "description": "Manage control of users and profiles, it's focus about the backend of the entertaiment's platform",
+  "description": "It's User and profile management and focused about the backend of the entertaiment's platform",
   "dependencies": {
     "@tensorflow-models/universal-sentence-encoder": "^1.3.3",
     "@tensorflow/tfjs-node": "^4.22.0",

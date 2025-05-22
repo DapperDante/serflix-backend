@@ -13,8 +13,8 @@ import { role } from "../interface/token.interface";
 const routerReview = Router();
 
 routerReview.post("/movie/", applyRole(role.profile), addReviewMovie);
-routerReview.get("/movie/:idMovie", applyRole(role.profile), getReviewsMovie);
+routerReview.get("/movie/:id", applyRole(role.profile), getReviewsMovie);
 routerReview.post("/serie/", applyRole(role.profile), addReviewSerie);
-routerReview.get("/serie/:idSerie", applyRole(role.profile), getReviewsSerie);
+routerReview.get("/serie/:id", applyRole(role.profile), getReviewsSerie);
 
 export default routerReview;

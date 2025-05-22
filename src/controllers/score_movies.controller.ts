@@ -30,27 +30,28 @@ export const addReviewMovie = async (req: Request, resp: Response, next: NextFun
 		const resultSp: spApi = query['0'].response;
 		if (resultSp.result.error)
 			throw new SyntaxError(resultSp.result.error);
-		resp.status(201).json({
-			msg: "Review created",
-		});
+		const resultEndPoint = {
+			msg: "Review created"
+		}
+		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
 		next(error);
 	}
 };
 export const getReviewsMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idMovie } = req.params;
+		const { id } = req.params;
 		const { idProfile } = req.user;
-		if (!idMovie) 
+		if (!id) 
 			throw new SyntaxError("idMovie is required");
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const [query]: any = await sequelize.query(
 			`
-				CALL get_score_movie(:idProfile, :idMovie, :timeZone);
+				CALL get_score_movie(:idProfile, :id, :timeZone);
 			`,
 			{
 				replacements: {
-					idMovie,
+					id,
 					idProfile,
 					timeZone
 				},

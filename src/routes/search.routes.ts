@@ -5,6 +5,6 @@ import { role } from "../interface/token.interface";
 
 const routerSearch = Router();
 
-routerSearch.get('', applyRole(role.profile),searchGlobal);
+routerSearch.get('/', applyRole(role.profile),searchGlobal);
 
 export default routerSearch;

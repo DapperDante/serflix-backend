@@ -73,8 +73,7 @@ export const getRecommendationsByProfile = async (
 				: null,
 			recommendations: await embeddingRecommendationsByProfile(
 				resultSp.result.recommendations
-			),
-			msg: "recommendations loaded",
+			)
 		};
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {

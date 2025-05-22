@@ -5,8 +5,8 @@ import { getSeriesByTitle } from "../tmdb_api/series.tmdb";
 import { SyntaxError } from "../error/errors";
 export const searchGlobal = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { query, times, manyItemsRelation } = req.query;
-		if (!(query && times && manyItemsRelation)) 
+		const { query, times, itemsRelation } = req.query;
+		if (!(query && times && itemsRelation)) 
 			throw new SyntaxError("query, times and manyItemsRelation are required");
 		const movies = await getMoviesByTitle(query.toString());
 		const series = await getSeriesByTitle(query.toString());
@@ -17,7 +17,7 @@ export const searchGlobal = async (req: Request, resp: Response, next: NextFunct
 			resultOfSearch = await getDataOfSearch(
 				query,
 				Number(times),
-				Number(manyItemsRelation)
+				Number(itemsRelation)
 			);
 		}
 		movies.results.map((movie: any) => {

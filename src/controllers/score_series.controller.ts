@@ -6,20 +6,20 @@ import { spApi } from "../interface/sp.interface";
 export const addReviewSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
 		const {
-			idSerie: serie_id,
+			idSerie,
 			score,
 			review,
 		} = req.body;
-		if (!(serie_id && score && review))
+		if (!(idSerie && score && review))
 			throw new SyntaxError("idSerie, score and review are required");
-		const {idProfile:profile_id} = req.user;
+		const {idProfile} = req.user;
 		const [query]: any = await sequelize.query(
 			`
-			CALL add_score_serie(:profile_id, :serie_id, :score, :review);
+			CALL add_score_serie(:idProfile, :idSerie, :score, :review);
 			`, {
 				replacements: {
-					profile_id,
-					serie_id,
+					idProfile,
+					idSerie,
 					score,
 					review
 				},
@@ -29,25 +29,26 @@ export const addReviewSerie = async (req: Request, resp: Response, next: NextFun
 		const resultSp: spApi = query['0'].response;
 		if(resultSp.error_code)
 			throw new SpError(resultSp.message);
-		resp.status(201).json({
-			msg: "Review created",
-		});
+		const resultEndPoint = {
+			msg: "Review created"
+		}
+		resp.status(201).json(resultEndPoint);
 	} catch (error: any) {
 		next(error);
 	}
 };
 export const getReviewsSerie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
-		const { idSerie } = req.params;
+		const { id } = req.params;
 		const { idProfile } = req.user;
 		const [query]: any = await sequelize.query(
 			`
-				CALL get_score_serie(:idProfile, :idSerie);
+				CALL get_score_serie(:idProfile, :id);
 			`,
 			{
 				replacements: {
 					idProfile,
-					idSerie
+					id
 				},
 				type: QueryTypes.SELECT
 			}

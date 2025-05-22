@@ -283,7 +283,6 @@ export const authenticate = async (req: Request, resp: Response, next: NextFunct
 		const resultEndPoint = {
 			msg: "User authenticated"
 		}
-		console.log(req.user);
 		sendEmailtoWelcome(req.user.email);
 		resp.status(200).json(resultEndPoint);
 	}catch(error: any){

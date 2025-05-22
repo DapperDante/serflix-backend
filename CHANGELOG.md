@@ -1,6 +1,6 @@
 # 1.2.2
 
-Added more security with token to user and profile, there are a better error handling
+Added more security with token to user and profile, there are better error handling
 
 # 1.2.1
 

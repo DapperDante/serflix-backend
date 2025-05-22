@@ -59,7 +59,7 @@ export const getMoviesByProfile = async (req: Request, resp: Response, next: Nex
 			entertaiment = await Promise.all(moviesId);
 		}
 		const resultEndPoint = {
-			results: entertaiment,
+			results: entertaiment
 		}
 		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
@@ -110,9 +110,10 @@ export const deleteFavoriteMovie = async (req: Request, resp: Response, next: Ne
 		const resultSp: spApi = query['0'].response;
 		if(resultSp.error_code)
 			throw new SpError(resultSp.message);
-		resp.status(200).json({
-			msg: "delete successful",
-		});
+		const resultEndPoint = {
+			msg: "Movie deleted",
+		}
+		resp.status(200).json(resultEndPoint);
 	} catch (error: any) {
 		next(error);
 	}
