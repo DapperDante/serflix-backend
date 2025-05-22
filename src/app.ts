@@ -51,7 +51,7 @@ class Server {
 	}
 	middleware() {
 		const allowOrigins = ENV_SETUP.CORS_ORIGINS?.split(",") || [];
-		app.use(cors({
+		app.use("/api", cors({
 			origin: function(origin, callback){
 				if (!ENV_SETUP.NODE_ENV.includes("production") || origin && allowOrigins.indexOf(origin) !== -1) {
 					callback(null, true);
