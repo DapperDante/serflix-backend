@@ -7,7 +7,7 @@ export const searchGlobal = async (req: Request, resp: Response, next: NextFunct
 	try {
 		const { query, times, itemsRelation } = req.query;
 		if (!(query && times && itemsRelation)) 
-			throw new SyntaxError("query, times and manyItemsRelation are required");
+			throw new SyntaxError("query, times and itemsRelation are required");
 		const movies = await getMoviesByTitle(query.toString());
 		const series = await getSeriesByTitle(query.toString());
 		//if query doesn't match to one title, so it has research for all movies until get movies to nearest match to thit query
