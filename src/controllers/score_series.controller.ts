@@ -41,14 +41,18 @@ export const getReviewsSerie = async (req: Request, resp: Response, next: NextFu
 	try {
 		const { id } = req.params;
 		const { idProfile } = req.user;
+		if(!id)
+			throw new SyntaxError("id is required");
+		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const [query]: any = await sequelize.query(
 			`
-				CALL get_score_serie(:idProfile, :id);
+				CALL get_score_serie(:idProfile, :id, :timeZone);
 			`,
 			{
 				replacements: {
+					id,
 					idProfile,
-					id
+					timeZone
 				},
 				type: QueryTypes.SELECT
 			}

@@ -1,7 +1,7 @@
 import sequelize from "../db/connection";
 import { NextFunction, Request, Response } from "express";
 import { QueryTypes } from "sequelize";
-import { SyntaxError } from "../error/errors";
+import { SpError, SyntaxError } from "../error/errors";
 import { spApi } from "../interface/sp.interface";
 export const addReviewMovie = async (req: Request, resp: Response, next: NextFunction) => {
 	try {
@@ -26,10 +26,10 @@ export const addReviewMovie = async (req: Request, resp: Response, next: NextFun
 				},
 				type: QueryTypes.SELECT
 			}
-		)
+		);
 		const resultSp: spApi = query['0'].response;
-		if (resultSp.result.error)
-			throw new SyntaxError(resultSp.result.error);
+		if(resultSp.error_code)
+			throw new SpError(resultSp.message);
 		const resultEndPoint = {
 			msg: "Review created"
 		}
@@ -43,7 +43,7 @@ export const getReviewsMovie = async (req: Request, resp: Response, next: NextFu
 		const { id } = req.params;
 		const { idProfile } = req.user;
 		if (!id) 
-			throw new SyntaxError("idMovie is required");
+			throw new SyntaxError("id is required");
 		const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		const [query]: any = await sequelize.query(
 			`
